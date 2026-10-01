@@ -2,448 +2,24 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Studio Remo Game · Ranking</title>
 <meta name="description" content="Ranking de remo indoor do Studio Remo Game — Itajaí, Navegantes, Joinville e Balneário Camboriú.">
+<meta name="theme-color" content="#0A1310">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚣</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-
-<style>
-/* ============================================================
-   TOKENS — dark-first (a marca e a referência Vai de Quadra são escuras)
-   ------------------------------------------------------------
-   REGRA DE COR DESTA INTERFACE:
-   · matiz  = UNIDADE (região). Nunca significa outra coisa.
-   · latão  = RECORDE. Reservado.
-   · posição no ranking = número + tamanho, nunca cor.
-   ============================================================ */
-:root{
-  --ground:#0A1310;
-  --ground-deep:#060C0A;
-  --surface:#111D19;
-  --surface-2:#17271F;
-  --surface-3:#1D3129;
-  --line:#20342C;
-  --line-soft:#1A2B24;
-  --ink:#E9F2EC;
-  --ink-2:#B4C7BE;
-  --muted:#7A9188;
-  --accent:#8CE04E;
-  --accent-deep:#5FAE2C;
-  --accent-wash:rgba(140,224,78,.12);
-  --brass:#E3A84F;
-  --brass-wash:rgba(227,168,79,.14);
-  --water:#0E2A2B;
-  --water-2:#123738;
-  --danger:#F0704F;
-  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 32px -18px rgba(0,0,0,.9);
-
-  /* cores das unidades */
-  --u-itj:#8CE04E;   /* Itajaí — matriz, verde da marca */
-  --u-nav:#3FD9C9;   /* Navegantes — turquesa */
-  --u-joi:#7B93FF;   /* Joinville — azul-violeta */
-  --u-bc:#FF7A9C;    /* Balneário Camboriú — coral */
-
-  --r-sm:6px; --r-md:10px; --r-lg:16px;
-  --step--1:.75rem; --step-0:.9375rem; --step-1:1.125rem;
-  --step-2:1.5rem; --step-3:2.125rem; --step-4:3rem;
-  --shell:1180px;
-}
-@media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){
-    --ground:#EDF2EE; --ground-deep:#E2E9E4; --surface:#FFFFFF; --surface-2:#F4F8F4; --surface-3:#EAF1EB;
-    --line:#D3DFD7; --line-soft:#E2EAE4; --ink:#0D1815; --ink-2:#3B4F47; --muted:#657A71;
-    --accent:#4E9B1E; --accent-deep:#3B7716; --accent-wash:rgba(78,155,30,.12);
-    --brass:#A6742A; --brass-wash:rgba(166,116,42,.14);
-    --water:#DCEAE8; --water-2:#CADEDB;
-    --u-itj:#4E9B1E; --u-nav:#0E8C80; --u-joi:#4257C4; --u-bc:#C43A62;
-    --shadow:0 1px 0 rgba(255,255,255,.6), 0 10px 28px -20px rgba(13,24,21,.45);
-  }
-}
-:root[data-theme="light"]{
-  --ground:#EDF2EE; --ground-deep:#E2E9E4; --surface:#FFFFFF; --surface-2:#F4F8F4; --surface-3:#EAF1EB;
-  --line:#D3DFD7; --line-soft:#E2EAE4; --ink:#0D1815; --ink-2:#3B4F47; --muted:#657A71;
-  --accent:#4E9B1E; --accent-deep:#3B7716; --accent-wash:rgba(78,155,30,.12);
-  --brass:#A6742A; --brass-wash:rgba(166,116,42,.14);
-  --water:#DCEAE8; --water-2:#CADEDB;
-  --u-itj:#4E9B1E; --u-nav:#0E8C80; --u-joi:#4257C4; --u-bc:#C43A62;
-  --shadow:0 1px 0 rgba(255,255,255,.6), 0 10px 28px -20px rgba(13,24,21,.45);
-}
-
-*,*::before,*::after{box-sizing:border-box}
-body{
-  margin:0; background:var(--ground); color:var(--ink);
-  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-size:var(--step-0); line-height:1.55;
-  -webkit-font-smoothing:antialiased;
-}
-h1,h2,h3{font-family:Archivo,"Helvetica Neue",Arial,sans-serif;margin:0;text-wrap:balance;line-height:1.05}
-p{margin:0}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
-.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
-.wrap{max-width:var(--shell);margin-inline:auto;padding-inline:20px}
-.eyebrow{
-  font-family:"IBM Plex Mono",monospace; font-size:.6875rem; letter-spacing:.16em;
-  text-transform:uppercase; color:var(--muted);
-}
-
-/* ============================================================ TOPO */
-.topbar{
-  border-bottom:1px solid var(--line);
-  background:color-mix(in srgb, var(--ground-deep) 92%, transparent);
-  position:sticky; top:0; z-index:40; backdrop-filter:blur(10px);
-}
-.topbar__in{display:flex;align-items:center;gap:24px;height:62px}
-.brand{display:flex;align-items:center;gap:12px;margin-right:auto;text-decoration:none;color:inherit}
-.brand__mark{width:48px;height:36px;display:block;flex:none;color:var(--accent)}
-.brand__mark svg{width:100%;height:100%;display:block}
-.brand__txt{display:flex;flex-direction:column;line-height:1}
-.brand__txt b{
-  font-family:Archivo,sans-serif;font-weight:800;font-stretch:112%;
-  font-size:.9375rem;letter-spacing:.02em;text-transform:uppercase;
-}
-.brand__txt span{font-size:.625rem;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;margin-top:3px}
-.nav{display:flex;gap:4px}
-.nav a{padding:7px 13px;border-radius:var(--r-sm);text-decoration:none;color:var(--ink-2);font-size:.8125rem;font-weight:500}
-.nav a:hover{background:var(--surface-2);color:var(--ink)}
-.nav a[aria-current]{background:var(--accent-wash);color:var(--accent);font-weight:600}
-.themebtn{
-  border:1px solid var(--line);background:var(--surface);color:var(--ink-2);
-  width:34px;height:34px;border-radius:var(--r-sm);cursor:pointer;display:grid;place-items:center;
-}
-.themebtn:hover{border-color:var(--accent);color:var(--accent)}
-@media(max-width:860px){.nav{display:none}}
-
-/* ============================================================ HERO + CONSOLE */
-.hero{padding:44px 0 0;position:relative;overflow:hidden}
-.hero::before{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:
-    radial-gradient(680px 240px at 15% 0%, var(--accent-wash), transparent 70%),
-    repeating-linear-gradient(180deg, transparent 0 38px, var(--line-soft) 38px 39px);
-  opacity:.5;
-}
-.hero__in{position:relative}
-.hero h1{
-  font-size:clamp(2.25rem,6vw,var(--step-4));font-weight:900;font-stretch:118%;
-  text-transform:uppercase;letter-spacing:-.015em;margin:14px 0 10px;
-}
-.hero h1 em{font-style:normal;color:var(--accent)}
-.hero__sub{color:var(--ink-2);max-width:56ch;font-size:var(--step-1)}
-
-.console{
-  margin-top:30px;background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden;
-}
-.console__grid{display:grid;grid-template-columns:repeat(4,1fr) auto}
-.fld{padding:13px 18px;border-right:1px solid var(--line-soft);display:flex;flex-direction:column;gap:6px;min-width:0}
-.fld:nth-child(4){border-right:none}
-.fld label{display:flex;align-items:center;gap:7px}
-.fld label svg{width:13px;height:13px;color:var(--accent);flex:none}
-.fld select{
-  appearance:none;background:transparent;border:0;color:var(--ink);
-  font-family:Archivo,sans-serif;font-weight:700;font-stretch:105%;font-size:1rem;
-  padding:0 22px 0 0;cursor:pointer;width:100%;text-overflow:ellipsis;
-  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
-  background-position:calc(100% - 9px) 55%, calc(100% - 4px) 55%;
-  background-size:5px 5px,5px 5px;background-repeat:no-repeat;
-}
-.fld select option{background:var(--surface);color:var(--ink)}
-.console__go{
-  border:0;margin:8px;border-radius:var(--r-md);padding:0 26px;cursor:pointer;
-  background:var(--accent);color:#07130A;
-  font-family:Archivo,sans-serif;font-weight:800;font-stretch:108%;text-transform:uppercase;
-  letter-spacing:.04em;font-size:.875rem;white-space:nowrap;transition:filter .15s;
-}
-.console__go:hover{filter:brightness(1.1)}
-@media(max-width:900px){
-  .console__grid{grid-template-columns:1fr 1fr}
-  .fld{border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
-  .fld:nth-child(2n){border-right:none}
-  .console__go{grid-column:1/-1;margin:12px;padding:13px}
-}
-
-/* ============================================================ FAIXA DE CONTEXTO */
-.ctx{
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  margin:34px 0 18px;padding-bottom:16px;border-bottom:1px solid var(--line);
-}
-.ctx h2{font-size:var(--step-2);font-weight:800;font-stretch:110%;text-transform:uppercase;letter-spacing:-.01em;margin-right:auto}
-.ctx h2 small{display:block;font-size:.6875rem;letter-spacing:.18em;color:var(--muted);
-  font-family:"IBM Plex Mono",monospace;font-weight:400;margin-bottom:6px;text-transform:uppercase}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:100px;
-  border:1px solid var(--line);background:var(--surface);font-size:.75rem;color:var(--ink-2)}
-.chip--rec{border-color:var(--brass);background:var(--brass-wash);color:var(--brass);font-weight:600}
-.chip b{font-family:"IBM Plex Mono",monospace;color:var(--ink);font-variant-numeric:tabular-nums}
-.chip--rec b{color:var(--brass)}
-
-/* recorte de período — o ranking geral trava a motivação de quem chegou agora */
-.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:3px;gap:2px}
-.seg button{
-  border:0;background:transparent;cursor:pointer;border-radius:100px;padding:5px 14px;
-  color:var(--muted);font-family:"IBM Plex Sans",sans-serif;font-size:.75rem;font-weight:500;
-  white-space:nowrap;transition:background .15s,color .15s;
-}
-.seg button:hover{color:var(--ink)}
-.seg button[aria-pressed="true"]{background:var(--accent-wash);color:var(--accent);font-weight:600}
-
-/* ============================================================ DISPUTA ENTRE UNIDADES (é também o filtro) */
-.duel{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:15px 18px 17px;margin-bottom:16px;box-shadow:var(--shadow);
-}
-.duel__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-.duel__head b{font-family:Archivo,sans-serif;font-weight:700;font-size:.875rem;text-transform:uppercase;letter-spacing:.03em}
-.duel__all{
-  display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:100px;cursor:pointer;
-  border:1px solid var(--line);background:transparent;color:var(--muted);
-  font-family:"IBM Plex Mono",monospace;font-size:.6875rem;letter-spacing:.1em;text-transform:uppercase;
-  transition:border-color .15s,color .15s,background .15s;
-}
-.duel__all:hover{border-color:var(--accent);color:var(--accent)}
-.duel__all[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-wash);color:var(--accent);font-weight:600}
-.duel__all svg{width:12px;height:12px}
-
-.duel__bar{display:flex;height:34px;border-radius:8px;overflow:hidden;gap:2px;background:var(--line-soft)}
-.duel__seg{
-  --u:var(--muted);
-  background:var(--u);border:0;padding:0;cursor:pointer;display:grid;place-items:center;min-width:0;
-  font-family:"IBM Plex Mono",monospace;font-size:.6875rem;font-weight:700;letter-spacing:.05em;
-  color:var(--ground-deep);
-  transition:flex-grow .45s cubic-bezier(.22,1,.36,1), opacity .2s, filter .2s;
-}
-.duel__seg span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 5px;pointer-events:none}
-.duel__seg:hover{filter:brightness(1.15)}
-.duel__seg--vazio{background:var(--line);color:var(--muted);cursor:not-allowed}
-/* quando UMA cidade está escolhida, as outras recuam */
-.duel__bar--filtrado .duel__seg{opacity:.28;filter:saturate(.5)}
-.duel__bar--filtrado .duel__seg[aria-pressed="true"]{opacity:1;filter:none}
-.duel__foot{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;flex-wrap:wrap;
-  font-size:.6875rem;color:var(--muted);font-family:"IBM Plex Mono",monospace;
-}
-.duel__foot b{color:var(--ink);font-weight:600}
-
-/* ============================================================ RAIAS — TOP 5 */
-.lanes{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
-.lane{
-  --u:var(--muted);
-  position:relative;display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:16px;
-  padding:14px 20px 14px 24px;border-radius:var(--r-md);border:1px solid var(--line);
-  background:linear-gradient(100deg,var(--water) 0%,var(--surface) 55%);
-  overflow:hidden;
-}
-.lane::before{ /* trilho da unidade */
-  content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--u);
-}
-.lane::after{ /* linha de boias da raia */
-  content:"";position:absolute;left:5px;right:0;bottom:0;height:2px;
-  background:repeating-linear-gradient(90deg,var(--u) 0 7px,transparent 7px 16px);
-  opacity:.3;
-}
-.lane--1{
-  padding-block:19px;background:linear-gradient(100deg,var(--water-2) 0%,var(--surface-2) 55%);
-  border-color:var(--line);
-}
-.lane--1::after{opacity:.6}
-.lane__pos{
-  font-family:Archivo,sans-serif;font-weight:900;font-stretch:120%;font-size:1.9rem;
-  line-height:.85;color:var(--muted);text-align:center;
-}
-.lane--1 .lane__pos{font-size:2.9rem;color:var(--ink)}
-.lane__pos small{display:block;font-family:"IBM Plex Mono",monospace;font-size:.5rem;
-  letter-spacing:.14em;color:var(--muted);font-weight:400;margin-top:5px}
-.lane__body{min-width:0}
-.lane__name{
-  font-family:Archivo,sans-serif;font-weight:800;font-stretch:106%;font-size:1.0625rem;
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-}
-.lane--1 .lane__name{font-size:var(--step-1)}
-.tag{
-  font-family:"IBM Plex Mono",monospace;font-size:.5625rem;letter-spacing:.1em;text-transform:uppercase;
-  padding:2px 7px;border-radius:3px;font-weight:600;
-}
-.tag--rec{background:var(--brass);color:#1A1206}
-.tag--pr{background:var(--accent-wash);color:var(--accent);border:1px solid var(--accent-deep)}
-.lane__meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:.75rem;color:var(--muted)}
-.lane__meta span.mi{display:inline-flex;align-items:center;gap:5px}
-.lane__meta i{width:3px;height:3px;border-radius:50%;background:var(--u);font-style:normal;flex:none}
-.gap{margin-top:9px;height:5px;border-radius:3px;background:var(--line-soft);position:relative;overflow:hidden}
-.gap__fill{
-  position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--u);opacity:.85;
-  transform-origin:left;animation:row .9s cubic-bezier(.22,1,.36,1) both;
-}
-@keyframes row{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-.lane__time{text-align:right;flex:none}
-.lane__time b{
-  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:1.65rem;letter-spacing:-.03em;
-  display:block;line-height:1;font-variant-numeric:tabular-nums;
-}
-.lane--1 .lane__time b{font-size:2.2rem;color:var(--ink)}
-.lane__time em{
-  font-style:normal;display:block;margin-top:6px;font-family:"IBM Plex Mono",monospace;
-  font-size:.6875rem;color:var(--muted);letter-spacing:.04em;
-}
-@media(max-width:680px){
-  .lane{grid-template-columns:40px 1fr;gap:12px;padding:13px 14px 13px 18px}
-  .lane__pos{font-size:1.6rem}
-  .lane--1 .lane__pos{font-size:2rem}
-  .lane__time{grid-column:2;text-align:left;margin-top:9px}
-  .lane__time b,.lane--1 .lane__time b{font-size:1.5rem}
-}
-
-/* selo de unidade — usado nas raias e na tabela */
-.usel{
-  --u:var(--muted);
-  display:inline-flex;align-items:center;gap:6px;padding:2px 9px 2px 3px;border-radius:100px;
-  border:1px solid var(--u);background:color-mix(in srgb, var(--u) 14%, transparent);
-  font-size:.6875rem;color:var(--ink);white-space:nowrap;
-}
-.usel__key{
-  display:inline-grid;place-items:center;min-width:29px;height:17px;border-radius:4px;padding:0 5px;
-  background:var(--u);color:var(--ground-deep);
-  font-family:"IBM Plex Mono",monospace;font-size:.5625rem;font-weight:700;letter-spacing:.06em;
-}
-
-/* ============================================================ TABELA — 6º EM DIANTE */
-.tablewrap{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);
-  overflow-x:auto;box-shadow:var(--shadow)}
-table{width:100%;border-collapse:collapse;min-width:680px}
-thead th{
-  text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);
-  font-family:"IBM Plex Mono",monospace;font-size:.625rem;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap;
-}
-thead th.num,tbody td.num{text-align:right}
-tbody td{padding:12px 16px;border-bottom:1px solid var(--line-soft);font-size:.875rem}
-tbody tr:last-child td{border-bottom:0}
-tbody tr{transition:background .12s}
-tbody tr:hover{background:var(--surface-2)}
-tbody tr.me{background:var(--accent-wash)}
-tbody tr td:first-child{box-shadow:inset 4px 0 0 var(--u,transparent)}
-td.pos{font-family:"IBM Plex Mono",monospace;color:var(--muted);width:56px;font-variant-numeric:tabular-nums}
-td.nome{font-weight:600;white-space:nowrap}
-td.t{font-family:"IBM Plex Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
-.delta{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--danger);font-variant-numeric:tabular-nums}
-.empty{padding:48px 20px;text-align:center;color:var(--muted)}
-.empty b{display:block;font-family:Archivo,sans-serif;font-size:var(--step-1);color:var(--ink);margin-bottom:6px;font-weight:700}
-
-/* no celular a tabela vira cartão — rolagem lateral em ranking é inutilizável */
-@media(max-width:640px){
-  .tablewrap{border:0;background:transparent;box-shadow:none;overflow-x:visible}
-  table{min-width:0}
-  thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  tbody tr{
-    display:grid;grid-template-columns:auto 1fr;gap:2px 10px;
-    border:1px solid var(--line);border-left:4px solid var(--u);border-radius:var(--r-md);
-    background:var(--surface);padding:12px 14px;margin-bottom:8px;
-  }
-  tbody tr td{border:0;padding:0;font-size:.8125rem}
-  tbody tr td:first-child{box-shadow:none}
-  /* posição e nome formam o cabeçalho do cartão */
-  td.pos{grid-column:1;grid-row:1;font-size:1.0625rem;font-weight:700;color:var(--ink);align-self:center}
-  td.nome{grid-column:2;grid-row:1;font-size:.9375rem;align-self:center}
-  /* os demais campos viram pares rótulo/valor */
-  tbody tr td:not(.pos):not(.nome){
-    grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;
-    gap:12px;padding:5px 0;border-top:1px solid var(--line-soft);
-  }
-  tbody tr td:not(.pos):not(.nome)::before{
-    content:attr(data-l);color:var(--muted);font-family:"IBM Plex Mono",monospace;
-    font-size:.625rem;letter-spacing:.1em;text-transform:uppercase;
-  }
-  tbody tr td.num{text-align:right}
-}
-
-/* ============================================================ LATERAL */
-.split{display:grid;grid-template-columns:1fr 340px;gap:26px;align-items:start;margin-top:26px}
-@media(max-width:980px){.split{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:20px;box-shadow:var(--shadow)}
-.card + .card{margin-top:18px}
-.card h3{font-size:.9375rem;font-weight:800;font-stretch:106%;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px}
-.card__hint{font-size:.75rem;color:var(--muted);margin-bottom:16px}
-
-.me__head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.avatar{
-  --u:var(--accent);
-  width:42px;height:42px;border-radius:50%;flex:none;display:grid;place-items:center;
-  background:var(--u);color:var(--ground-deep);
-  font-family:Archivo,sans-serif;font-weight:800;font-size:.9375rem;
-}
-.me__head div{min-width:0}
-.me__head b{display:block;font-family:Archivo,sans-serif;font-weight:700;font-size:.9375rem}
-.me__head span{font-size:.6875rem;color:var(--muted)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
-  border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;margin-bottom:16px}
-.stat{background:var(--surface);padding:12px 10px;text-align:center}
-.stat b{display:block;font-family:"IBM Plex Mono",monospace;font-size:1.125rem;font-weight:600;
-  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.stat span{font-size:.5625rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
-  font-family:"IBM Plex Mono",monospace}
-.stat--up b{color:var(--accent)}
-.spark{width:100%;height:62px;display:block;overflow:visible}
-.sparklab{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;
-  font-size:.625rem;color:var(--muted);margin-top:7px}
-
-.badges{display:flex;gap:9px;flex-wrap:wrap}
-.badge{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;flex:none;
-  border:1px solid var(--line);background:var(--surface-2)}
-.badge svg{width:22px;height:22px;color:var(--muted)}
-.badge--on{border-color:var(--accent);background:var(--accent-wash)}
-.badge--on svg{color:var(--accent)}
-.badge--brass{border-color:var(--brass);background:var(--brass-wash)}
-.badge--brass svg{color:var(--brass)}
-
-.lock{display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:var(--r-md);
-  background:var(--surface-2);border:1px dashed var(--line);margin-bottom:16px}
-.lock svg{width:17px;height:17px;color:var(--brass);flex:none;margin-top:2px}
-.lock p{font-size:.75rem;color:var(--ink-2);line-height:1.5}
-.lock b{color:var(--ink)}
-.pinrow{display:flex;gap:8px}
-.pin{flex:1;background:var(--ground);border:1px solid var(--line);border-radius:var(--r-md);
-  padding:11px 13px;color:var(--ink);font-family:"IBM Plex Mono",monospace;letter-spacing:.4em;font-size:.9375rem}
-.pin::placeholder{letter-spacing:.2em;color:var(--muted)}
-.btn{border:1px solid var(--accent);background:var(--accent);color:#07130A;border-radius:var(--r-md);
-  padding:11px 18px;cursor:pointer;font-family:Archivo,sans-serif;font-weight:700;
-  font-size:.8125rem;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
-.btn:hover{filter:brightness(1.1)}
-.btn--ghost{background:transparent;color:var(--ink-2);border-color:var(--line)}
-.btn--ghost:hover{border-color:var(--accent);color:var(--accent);filter:none}
-.msg{margin-top:12px;font-size:.75rem;font-family:"IBM Plex Mono",monospace;min-height:1.2em}
-.msg--ok{color:var(--accent)}
-.msg--no{color:var(--danger)}
-.queue{display:flex;flex-direction:column;gap:9px}
-.qitem{--u:var(--muted);display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:var(--r-md);
-  border:1px solid var(--line);background:var(--surface-2);border-left:4px solid var(--u)}
-.qitem div{min-width:0;flex:1}
-.qitem b{display:block;font-size:.8125rem;font-weight:600}
-.qitem span{font-size:.6875rem;color:var(--muted);font-family:"IBM Plex Mono",monospace}
-.qitem .t{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:.9375rem}
-
-.scope{margin:52px 0 60px;padding:22px;border-radius:var(--r-lg);
-  border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
-.scope h3{font-size:var(--step-1);font-weight:800;font-stretch:108%;text-transform:uppercase;margin-bottom:14px}
-.scope ol{margin:0;padding-left:20px;color:var(--ink-2);font-size:.875rem;display:flex;flex-direction:column;gap:9px}
-.scope ol b{color:var(--ink)}
-.scope li::marker{color:var(--accent)}
-
-.foot{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--muted);font-size:.75rem;
-  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
-
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important}
-}
-</style>
+<link rel="stylesheet" href="assets/styles.css?v=6">
+<script>try{var t=localStorage.getItem('srg-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
+<div class="grain" aria-hidden="true"></div>
+<a class="skip" href="#main">Pular para o conteúdo</a>
 
 <header class="topbar">
   <div class="wrap topbar__in">
-    <a class="brand" href="#">
+    <a class="brand" href="#/ranking" aria-label="Studio Remo Game — ir para o ranking">
       <span class="brand__mark" aria-hidden="true">
         <svg viewBox="0 0 64 48">
           <g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -458,15 +34,16 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
           <circle cx="19" cy="19.6" r="4.3" fill="currentColor"/>
         </svg>
       </span>
-      <span class="brand__txt"><b>Studio Remo Game</b><span>Ranking</span></span>
+      <span class="brand__txt"><b>Studio Remo Game</b><span>Remo indoor · SC</span></span>
     </a>
-    <nav class="nav">
-      <a href="#" aria-current="page">Ranking</a>
-      <a href="#progresso">Meu progresso</a>
-      <a href="#prof">Área do professor</a>
-      <a href="#escopo">Escopo</a>
+    <nav class="nav" id="nav" aria-label="Principal">
+      <span class="nav__ind" id="nav-ind" aria-hidden="true"></span>
+      <a href="#/ranking" data-route="ranking">Ranking</a>
+      <a href="#/progresso" data-route="progresso">Meu progresso</a>
+      <a href="#/professor" data-route="professor">Área do professor</a>
+      <a href="#/escopo" data-route="escopo">Escopo</a>
     </nav>
-    <button class="themebtn" id="theme" aria-label="Alternar tema claro e escuro">
+    <button class="themebtn" id="theme" type="button" aria-label="Alternar tema claro e escuro">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
       </svg>
@@ -474,489 +51,284 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
   </div>
 </header>
 
-<section class="hero">
-  <div class="wrap hero__in">
-    <p class="eyebrow">Remo indoor · Santa Catarina</p>
-    <h1>O ranking da <em>casa</em>,<br>raia por raia.</h1>
-    <p class="hero__sub">Todo tempo lançado no ergômetro entra na disputa. Escolha a categoria, a distância e a unidade — e veja onde você está.</p>
+<main id="main" tabindex="-1">
 
-    <div class="console" role="search" aria-label="Filtros do ranking">
-      <div class="console__grid">
-        <div class="fld">
-          <label class="eyebrow" for="f-sexo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
-            Categoria
-          </label>
-          <select id="f-sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select>
+  <!-- ============================================================ RANKING -->
+  <section class="view" data-view="ranking" aria-labelledby="h-ranking">
+    <div class="hero">
+      <div class="water" aria-hidden="true">
+        <div class="water__track">
+          <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 30 Q90 12 180 30 T360 30 T540 30 T720 30 T900 30 T1080 30 T1260 30 T1440 30 V60 H0Z"/></svg>
+          <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 30 Q90 12 180 30 T360 30 T540 30 T720 30 T900 30 T1080 30 T1260 30 T1440 30 V60 H0Z"/></svg>
         </div>
-        <div class="fld">
-          <label class="eyebrow" for="f-faixa">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-            Faixa etária
-          </label>
-          <select id="f-faixa"></select>
-        </div>
-        <div class="fld">
-          <label class="eyebrow" for="f-dist">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 12h20M6 8v8M18 8v8"/></svg>
-            Distância
-          </label>
-          <select id="f-dist"><option value="500">500 metros</option><option value="1000">1.000 metros</option><option value="2000">2.000 metros</option></select>
-        </div>
-        <div class="fld">
-          <label class="eyebrow" for="f-uni">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 21s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
-            Unidade
-          </label>
-          <select id="f-uni"></select>
-        </div>
-        <button class="console__go" id="go">Ver ranking</button>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<main class="wrap">
-  <div class="ctx">
-    <h2><small id="ctx-eyebrow">Classificação geral</small><span id="ctx-title">Masculino · 20–24 anos · 500m</span></h2>
-    <div class="seg" id="periodo" role="group" aria-label="Recorte de período">
-      <button type="button" data-p="geral" aria-pressed="true">Geral</button>
-      <button type="button" data-p="ano" aria-pressed="false">Este ano</button>
-      <button type="button" data-p="mes" aria-pressed="false">Este mês</button>
-    </div>
-    <span class="chip" id="chip-n"><b>0</b> atletas</span>
-    <span class="chip chip--rec" id="chip-rec">Recorde da casa <b>—</b></span>
-  </div>
-
-  <div class="split">
-    <div>
-      <div class="duel" id="duel">
-        <div class="duel__head">
-          <b>Disputa entre unidades</b>
-          <button type="button" class="duel__all" id="duel-all" aria-pressed="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-            Todos
-          </button>
-        </div>
-        <div class="duel__bar" id="duel-bar" role="group" aria-label="Filtrar por unidade"></div>
-        <div class="duel__foot">
-          <span id="duel-sub">Clique numa cidade para ver só ela</span>
-          <span id="duel-lead"></span>
+        <div class="water__track water__track--back">
+          <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 34 Q90 18 180 34 T360 34 T540 34 T720 34 T900 34 T1080 34 T1260 34 T1440 34 V60 H0Z"/></svg>
+          <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 34 Q90 18 180 34 T360 34 T540 34 T720 34 T900 34 T1080 34 T1260 34 T1440 34 V60 H0Z"/></svg>
         </div>
       </div>
+      <div class="wrap hero__in">
+        <p class="eyebrow rise">Remo indoor · Santa Catarina</p>
+        <h1 id="h-ranking" class="rise" style="--d:1">O ranking da <em>casa</em>,<br>raia por raia.</h1>
+        <p class="hero__sub rise" style="--d:2">Todo tempo lançado no ergômetro entra na disputa. Escolha a categoria, a distância e a unidade — e veja onde você está.</p>
 
-      <div class="lanes" id="lanes"></div>
-      <div class="tablewrap"><div id="tablehost"></div></div>
-
-      <div class="scope" id="escopo">
-        <h3>Como o tempo entra no ranking</h3>
-        <ol>
-          <li><b>Atleta rema</b> e o monitor do ergômetro mostra o tempo final, o split médio e a potência.</li>
-          <li><b>Professor lança</b> o resultado pelo tablet da sala, com PIN pessoal — o atleta não digita o próprio tempo.</li>
-          <li><b>Sistema classifica</b> automaticamente por categoria, faixa etária, distância e unidade.</li>
-          <li><b>Recorde cai</b> e a plataforma marca a linha, notifica o atleta e registra quem foi destronado.</li>
-        </ol>
-      </div>
-    </div>
-
-    <aside>
-      <div class="card" id="progresso">
-        <h3>Meu progresso</h3>
-        <p class="card__hint">Sua evolução nos últimos 6 testes de 500m</p>
-        <div class="me__head">
-          <span class="avatar" style="--u:var(--u-nav)">ER</span>
-          <div>
-            <b>Eder Rodrigues</b>
-            <span>25 anos · Navegantes · desde mar/2025</span>
-          </div>
-        </div>
-        <div class="stats">
-          <div class="stat"><b class="mono">1:40.0</b><span>Recorde</span></div>
-          <div class="stat"><b class="mono">4º</b><span>Na faixa</span></div>
-          <div class="stat stat--up"><b class="mono">−6.2s</b><span>No ano</span></div>
-        </div>
-        <svg class="spark" viewBox="0 0 300 62" preserveAspectRatio="none" aria-label="Evolução do tempo de 500 metros, de 1:46.2 para 1:40.0">
-          <defs>
-            <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="var(--u-nav)" stop-opacity=".3"/>
-              <stop offset="100%" stop-color="var(--u-nav)" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <line x1="0" y1="15" x2="300" y2="15" stroke="var(--line-soft)" stroke-width="1"/>
-          <line x1="0" y1="38" x2="300" y2="38" stroke="var(--line-soft)" stroke-width="1"/>
-          <path d="M0 8 L60 17 L120 14 L180 30 L240 38 L300 50 L300 62 L0 62 Z" fill="url(#sg)"/>
-          <path d="M0 8 L60 17 L120 14 L180 30 L240 38 L300 50" fill="none" stroke="var(--u-nav)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-          <circle cx="300" cy="50" r="4" fill="var(--u-nav)"/>
-          <circle cx="300" cy="50" r="8" fill="none" stroke="var(--u-nav)" stroke-opacity=".3" stroke-width="2"/>
-        </svg>
-        <div class="sparklab"><span>1:46.2</span><span>1:40.0 · recorde pessoal</span></div>
-      </div>
-
-      <div class="card">
-        <h3>Conquistas</h3>
-        <p class="card__hint">3 de 6 desbloqueadas</p>
-        <div class="badges">
-          <span class="badge badge--on" title="Primeiro teste registrado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 15 9l7 .6-5.3 4.6L18.2 21 12 17.3 5.8 21l1.5-6.8L2 9.6 9 9z"/></svg></span>
-          <span class="badge badge--on" title="Quebrou o recorde pessoal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/></svg></span>
-          <span class="badge badge--brass" title="Top 5 da faixa etária"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-2.6L17 22l-1.5-8"/></svg></span>
-          <span class="badge" title="Bloqueada — 50 treinos no ano"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/></svg></span>
-          <span class="badge" title="Bloqueada — 2.000m abaixo de 7:00"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/></svg></span>
-          <span class="badge" title="Bloqueada — recorde da unidade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/></svg></span>
-        </div>
-      </div>
-
-      <div class="card" id="prof">
-        <h3>Área do professor</h3>
-        <p class="card__hint">Lançar e corrigir tempos</p>
-        <div class="lock">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/></svg>
-          <p>Só o professor altera tempo. Cada lançamento fica registrado com <b>quem lançou</b>, data e hora — se um número for contestado, dá pra rastrear.</p>
-        </div>
-        <div class="pinrow">
-          <input class="pin" id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN" aria-label="PIN do professor">
-          <button class="btn" id="unlock">Entrar</button>
-        </div>
-        <p class="msg" id="pinmsg" role="status"></p>
-
-        <div id="queue" hidden>
-          <p class="card__hint" style="margin:16px 0 10px">Aguardando validação</p>
-          <div class="queue">
-            <div class="qitem" style="--u:var(--u-itj)"><div><b>Marina Kuhnen</b><span>500m · Itajaí · hoje 09:12</span></div><span class="t mono">1:52.4</span></div>
-            <div class="qitem" style="--u:var(--u-nav)"><div><b>Thiago Bertoldi</b><span>2.000m · Navegantes · hoje 08:40</span></div><span class="t mono">7:04.8</span></div>
-          </div>
-          <div class="pinrow" style="margin-top:12px">
-            <button class="btn" style="flex:1" id="approve">Validar os 2</button>
-            <button class="btn btn--ghost" id="lockback">Sair</button>
+        <div class="console rise" style="--d:3" role="search" aria-label="Filtros do ranking">
+          <div class="console__grid">
+            <div class="fld">
+              <label class="eyebrow" for="f-sexo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+                Categoria
+              </label>
+              <select id="f-sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select>
+            </div>
+            <div class="fld">
+              <label class="eyebrow" for="f-faixa">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                Faixa etária
+              </label>
+              <select id="f-faixa"></select>
+            </div>
+            <div class="fld">
+              <label class="eyebrow" for="f-dist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 12h20M6 8v8M18 8v8"/></svg>
+                Distância
+              </label>
+              <select id="f-dist"><option value="500">500 metros</option><option value="1000">1.000 metros</option><option value="2000">2.000 metros</option></select>
+            </div>
+            <div class="fld">
+              <label class="eyebrow" for="f-uni">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 21s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+                Unidade
+              </label>
+              <select id="f-uni"></select>
+            </div>
+            <button class="console__go" id="go" type="button">Ver ranking</button>
           </div>
         </div>
       </div>
-    </aside>
-  </div>
+    </div>
 
-  <div class="foot">
+    <div class="wrap">
+      <div class="ctx">
+        <h2><small id="ctx-eyebrow">Classificação geral</small><span id="ctx-title">Masculino · 20–24 anos · 500m</span></h2>
+        <div class="seg" id="periodo" role="group" aria-label="Recorte de período">
+          <button type="button" data-p="geral" aria-pressed="true">Geral</button>
+          <button type="button" data-p="12m" aria-pressed="false">12 meses</button>
+          <button type="button" data-p="30d" aria-pressed="false">30 dias</button>
+        </div>
+        <span class="chip" id="chip-n"><b>0</b> atletas</span>
+        <span class="chip chip--rec" id="chip-rec">Recorde da casa <b>—</b></span>
+      </div>
+
+      <div class="split">
+        <div>
+          <div class="duel" id="duel">
+            <div class="duel__head">
+              <b>Disputa entre unidades</b>
+              <button type="button" class="duel__all" id="duel-all" aria-pressed="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                Todos
+              </button>
+            </div>
+            <div class="duel__bar" id="duel-bar" role="group" aria-label="Filtrar por unidade"></div>
+            <div class="duel__foot">
+              <span id="duel-sub">Clique numa cidade para ver só ela</span>
+              <span id="duel-lead"></span>
+            </div>
+          </div>
+
+          <div class="lanes" id="lanes"></div>
+          <div class="tablewrap"><div id="tablehost"></div></div>
+        </div>
+
+        <aside class="side" id="rk-side" aria-label="Recordes e destaques"></aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ MEU PROGRESSO -->
+  <section class="view" data-view="progresso" aria-labelledby="h-prog">
+    <div class="wrap">
+      <div class="phead phead--row">
+        <div>
+          <p class="eyebrow rise">Meu progresso</p>
+          <h1 id="h-prog" class="rise" style="--d:1">Sua <em>evolução</em>,<br>teste a teste.</h1>
+        </div>
+        <div class="picker rise" style="--d:2">
+          <label class="eyebrow" for="pg-atleta">Ver o perfil de</label>
+          <select id="pg-atleta" class="input"></select>
+        </div>
+      </div>
+      <div id="pg"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ ÁREA DO PROFESSOR -->
+  <section class="view" data-view="professor" aria-labelledby="h-prof">
+    <div class="wrap">
+      <div class="phead">
+        <p class="eyebrow rise">Área do professor</p>
+        <h1 id="h-prof" class="rise" style="--d:1">Só entra no ranking<br>o que o <em>professor</em> assina.</h1>
+        <p class="rise" style="--d:2">Lance tempos, valide o que veio do tablet da sala e acompanhe cada alteração — com PIN pessoal e registro de quem fez o quê.</p>
+      </div>
+      <div id="pf"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ ESCOPO -->
+  <section class="view" data-view="escopo" aria-labelledby="h-esc">
+    <div class="wrap">
+      <div class="phead">
+        <p class="eyebrow rise">Escopo do projeto</p>
+        <h1 id="h-esc" class="rise" style="--d:1">Duas frentes de <em>gamificação</em>,<br>um placar só.</h1>
+        <p class="rise" style="--d:2">O Studio Remo Game transforma o teste no ergômetro em disputa: de um lado, o ranking da casa; do outro, a evolução de cada atleta. Aqui está o que a plataforma entrega e como ela roda no dia a dia das unidades.</p>
+      </div>
+
+      <div class="fronts">
+        <article class="front front--a spot rise" style="--d:3">
+          <span class="front__n" aria-hidden="true">01</span>
+          <p class="eyebrow">Frente 1 · Competição</p>
+          <h3>O ranking da casa</h3>
+          <p>Todo tempo validado entra numa classificação pública — por categoria, faixa etária, distância e unidade.</p>
+          <ul class="checks">
+            <li>Pódio em raias com o top 5 e tabela completa do 6º em diante</li>
+            <li>Recortes geral, 12 meses e 30 dias — quem chegou agora também disputa</li>
+            <li>Disputa entre Itajaí, Navegantes, Joinville e Balneário Camboriú</li>
+            <li>Recorde da casa em destaque, com aviso quando cai</li>
+          </ul>
+          <a class="front__go" href="#/ranking">Abrir o ranking <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="front front--b spot rise" style="--d:4">
+          <span class="front__n" aria-hidden="true">02</span>
+          <p class="eyebrow">Frente 2 · Progressão</p>
+          <h3>A jornada do atleta</h3>
+          <p>Cada aluno tem um painel próprio com evolução, metas e conquistas — o motivo pra voltar no próximo teste.</p>
+          <ul class="checks">
+            <li>Níveis e XP: de Estreante a Lenda da casa</li>
+            <li>10 conquistas com barra de progresso — inclusive as que ainda faltam</li>
+            <li>Próximo alvo: quantos segundos faltam pra passar quem está à frente</li>
+            <li>Gráfico de evolução e histórico completo de testes</li>
+          </ul>
+          <a class="front__go" href="#/progresso">Ver meu progresso <span aria-hidden="true">→</span></a>
+        </article>
+      </div>
+
+      <div class="sec">
+        <p class="eyebrow">Fluxo</p>
+        <h2>Como o tempo entra no ranking</h2>
+        <div class="flow reveal">
+          <span class="flow__boat" aria-hidden="true">
+            <svg viewBox="0 0 26 12"><path d="M1 7.2Q13 9.6 25 6.2Q13 5.4 1 7.2Z" fill="currentColor"/><path d="M8.5 1.8 14 11M12.5 1.2 17.5 10.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".75"/><circle cx="11.6" cy="4.6" r="1.7" fill="currentColor"/></svg>
+          </span>
+          <div class="step" style="--i:0">
+            <span class="step__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0" opacity=".5"/><path d="M8 7l8-3"/></svg></span>
+            <b>Atleta rema</b>
+            <p>O monitor do ergômetro mostra tempo final, split médio e potência.</p>
+          </div>
+          <div class="step" style="--i:1">
+            <span class="step__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M11 18h2"/></svg></span>
+            <b>Professor lança</b>
+            <p>Pelo tablet da sala, com PIN pessoal. O atleta não digita o próprio tempo.</p>
+          </div>
+          <div class="step" style="--i:2">
+            <span class="step__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V13h6v8M9 21V8h6v13M15 21v-6h6v6M2 21h20"/></svg></span>
+            <b>Sistema classifica</b>
+            <p>Categoria, faixa etária, distância e unidade — na hora, sem planilha.</p>
+          </div>
+          <div class="step step--rec" style="--i:3">
+            <span class="step__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></span>
+            <b>Recorde cai</b>
+            <p>A linha ganha destaque, o atleta é avisado e fica registrado quem foi destronado.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <p class="eyebrow">Regras do jogo</p>
+        <h2>O que define a classificação</h2>
+        <div class="rules">
+          <div class="rule reveal" style="--i:0"><span class="eyebrow">Categorias</span><div class="pills"><span>Masculino</span><span>Feminino</span></div></div>
+          <div class="rule reveal" style="--i:1"><span class="eyebrow">Faixas etárias</span><div class="pills"><span>20–24</span><span>25–29</span><span>30–39</span><span>40–49</span><span>50+</span></div></div>
+          <div class="rule reveal" style="--i:2"><span class="eyebrow">Distâncias</span><div class="pills"><span>500m</span><span>1.000m</span><span>2.000m</span></div></div>
+          <div class="rule reveal" style="--i:3"><span class="eyebrow">Validação</span><p>Só professor lança ou valida, com PIN. Cada lançamento guarda quem, quando e de qual tablet.</p></div>
+          <div class="rule reveal" style="--i:4"><span class="eyebrow">Desempate</span><p>Tempo igual? Fica à frente quem marcou primeiro.</p></div>
+          <div class="rule reveal" style="--i:5"><span class="eyebrow">Recortes</span><p>Geral, últimos 12 meses e últimos 30 dias — o recorde histórico não trava a motivação de quem chegou agora.</p></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <p class="eyebrow">Entregas</p>
+        <h2>Por fase</h2>
+        <div class="phases">
+          <article class="phase reveal" style="--i:0">
+            <span class="phase__tag">Fase 1 · Placar</span>
+            <h3>Ranking e professor</h3>
+            <ul class="checks checks--sm">
+              <li>Ranking completo com filtros e recortes</li>
+              <li>Área do professor com PIN e fila de validação</li>
+              <li>Registro de lançamentos (auditoria)</li>
+              <li>Celular, tablet e computador</li>
+            </ul>
+          </article>
+          <article class="phase reveal" style="--i:1">
+            <span class="phase__tag">Fase 2 · Jornada</span>
+            <h3>Perfil do atleta</h3>
+            <ul class="checks checks--sm">
+              <li>Níveis, XP e conquistas</li>
+              <li>Próximo alvo no ranking</li>
+              <li>Gráfico de evolução por distância</li>
+              <li>Histórico de testes</li>
+            </ul>
+          </article>
+          <article class="phase phase--next reveal" style="--i:2">
+            <span class="phase__tag">Fase 3 · Arena <em>proposta</em></span>
+            <h3>Além da tela</h3>
+            <ul class="checks checks--sm">
+              <li>Modo telão para a recepção</li>
+              <li>Desafios mensais entre unidades</li>
+              <li>Aviso de recorde pelo WhatsApp</li>
+              <li>Leitura automática do monitor do ergômetro</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+
+      <div class="cta reveal">
+        <div>
+          <h2>Tudo o que você está vendo é navegável.</h2>
+          <p>Os dados são fictícios; o fluxo é real. Lance um tempo na área do professor e veja o ranking mudar na hora.</p>
+        </div>
+        <a class="btn btn--lg" href="#/professor">Testar a área do professor <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="wrap foot">
     <span>Mockup de interface · dados fictícios para validação visual</span>
     <span class="mono">Studio Remo Game · Itajaí / SC</span>
-  </div>
+  </footer>
 </main>
 
-<script>
-(function(){
-  "use strict";
+<nav class="tabbar" aria-label="Navegação">
+  <a href="#/ranking" data-route="ranking">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V13h6v8M9 21V8h6v13M15 21v-6h6v6"/></svg>
+    <span>Ranking</span>
+  </a>
+  <a href="#/progresso" data-route="progresso">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/></svg>
+    <span>Progresso</span>
+  </a>
+  <a href="#/professor" data-route="professor">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/></svg>
+    <span>Professor</span>
+  </a>
+  <a href="#/escopo" data-route="escopo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+    <span>Escopo</span>
+  </a>
+</nav>
 
-  /* ---------- tema ---------- */
-  document.getElementById('theme').addEventListener('click', function(){
-    var cur = document.documentElement.getAttribute('data-theme');
-    if(!cur){ cur = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
-    document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
-  });
-
-  /* ---------- configuração (o cliente edita isto) ----------
-     Cada unidade tem SIGLA (para quem não distingue cor) + COR (para bater o olho). */
-  var UNIDADES = [
-    {nome:'Itajaí',             sigla:'ITJ', cor:'var(--u-itj)'},
-    {nome:'Navegantes',         sigla:'NAV', cor:'var(--u-nav)'},
-    {nome:'Joinville',          sigla:'JOI', cor:'var(--u-joi)'},
-    {nome:'Balneário Camboriú', sigla:'BC',  cor:'var(--u-bc)'}
-  ];
-  var UMAP = {};
-  UNIDADES.forEach(function(u){ UMAP[u.nome] = u; });
-
-  var FAIXAS = [
-    {id:'20-24', label:'20–24 anos', min:20, max:24},
-    {id:'25-29', label:'25–29 anos', min:25, max:29},
-    {id:'30-39', label:'30–39 anos', min:30, max:39},
-    {id:'40-49', label:'40–49 anos', min:40, max:49},
-    {id:'50+',   label:'50 anos ou mais', min:50, max:120}
-  ];
-
-  /* ---------- atletas (b = tempo de 500m em segundos) ---------- */
-  var ATLETAS = [
-    {n:'Lucas Boabaid',      s:'M', i:22, u:'Itajaí',              b:98.0},
-    {n:'Pedro Hoffmann',     s:'M', i:21, u:'Joinville',           b:99.4},
-    {n:'Gabriel Sviatopolk', s:'M', i:24, u:'Itajaí',              b:101.2},
-    {n:'Vinícius Amorim',    s:'M', i:20, u:'Balneário Camboriú',  b:103.7},
-    {n:'Murilo Fischer',     s:'M', i:23, u:'Navegantes',          b:104.9},
-    {n:'Otávio Zimmer',      s:'M', i:22, u:'Joinville',           b:106.3},
-    {n:'Enzo Cardoso',       s:'M', i:24, u:'Itajaí',              b:108.1},
-    {n:'Bruno Tavares',      s:'M', i:21, u:'Navegantes',          b:109.8},
-    {n:'Léo Marcondes',      s:'M', i:23, u:'Balneário Camboriú',  b:111.5},
-    {n:'Eder Rodrigues',     s:'M', i:25, u:'Navegantes',          b:100.0, me:true},
-    {n:'Rafael Meurer',      s:'M', i:27, u:'Itajaí',              b:97.6},
-    {n:'Diego Sansão',       s:'M', i:29, u:'Joinville',           b:99.1},
-    {n:'André Baumgarten',   s:'M', i:26, u:'Itajaí',              b:102.8},
-    {n:'Fábio Lentz',        s:'M', i:28, u:'Balneário Camboriú',  b:105.4},
-    {n:'Henrique Volz',      s:'M', i:27, u:'Navegantes',          b:107.9},
-    {n:'Marcelo Deschamps',  s:'M', i:34, u:'Itajaí',              b:99.8},
-    {n:'Rodrigo Kremer',     s:'M', i:37, u:'Navegantes',          b:103.2},
-    {n:'Sandro Bianchini',   s:'M', i:31, u:'Joinville',           b:106.9},
-    {n:'Tiago Abreu',        s:'M', i:35, u:'Balneário Camboriú',  b:108.6},
-    {n:'Paulo Nienkötter',   s:'M', i:38, u:'Itajaí',              b:110.4},
-    {n:'Alexandre Poffo',    s:'M', i:44, u:'Itajaí',              b:104.6},
-    {n:'Cláudio Wippel',     s:'M', i:47, u:'Joinville',           b:109.3},
-    {n:'Gilmar Réus',        s:'M', i:41, u:'Navegantes',          b:112.0},
-    {n:'Osmar Delfes',       s:'M', i:46, u:'Balneário Camboriú',  b:115.7},
-    {n:'Jorge Tzachel',      s:'M', i:53, u:'Itajaí',              b:112.7},
-    {n:'Nelson Fronza',      s:'M', i:58, u:'Navegantes',          b:118.4},
-    {n:'Ivo Bittencourt',    s:'M', i:61, u:'Joinville',           b:124.1},
-    {n:'Marina Kuhnen',      s:'F', i:23, u:'Itajaí',              b:112.4},
-    {n:'Isabela Recife',     s:'F', i:21, u:'Joinville',           b:114.8},
-    {n:'Camila Boabaid',     s:'F', i:24, u:'Itajaí',              b:116.1},
-    {n:'Larissa Steil',      s:'F', i:20, u:'Navegantes',          b:119.5},
-    {n:'Bruna Cavalcanti',   s:'F', i:22, u:'Balneário Camboriú',  b:121.0},
-    {n:'Manuela Petry',      s:'F', i:24, u:'Joinville',           b:123.4},
-    {n:'Sofia Menegotto',    s:'F', i:21, u:'Navegantes',          b:125.9},
-    {n:'Juliana Mafra',      s:'F', i:26, u:'Itajaí',              b:113.9},
-    {n:'Ana Beatriz Klein',  s:'F', i:28, u:'Joinville',           b:117.2},
-    {n:'Letícia Bornhausen', s:'F', i:27, u:'Balneário Camboriú',  b:120.8},
-    {n:'Patrícia Sell',      s:'F', i:33, u:'Itajaí',              b:115.6},
-    {n:'Renata Voigt',       s:'F', i:36, u:'Navegantes',          b:120.3},
-    {n:'Cristiane Hulse',    s:'F', i:31, u:'Joinville',           b:122.7},
-    {n:'Silvana Duarte',     s:'F', i:42, u:'Itajaí',              b:123.8},
-    {n:'Márcia Feldmann',    s:'F', i:45, u:'Navegantes',          b:127.5},
-    {n:'Vera Lúcia Amaral',  s:'F', i:55, u:'Joinville',           b:131.2}
-  ];
-
-  /* ---------- data de cada tempo ----------
-     A academia roda dia de teste uma vez por mês, então as marcas se agrupam
-     por mês em vez de espalhar no calendário. Distribui os atletas pelos
-     últimos meses com peso maior nos recentes. Determinístico de propósito:
-     recarregar a página não pode reembaralhar o ranking. */
-  var HOJE = new Date();
-  ATLETAS.forEach(function(a, k){
-    var h = (k * 29 + Math.round(a.b * 13)) % 100;
-    var mesesAtras = h < 46 ? 0 : h < 64 ? 1 : h < 78 ? 2 : h < 87 ? 3 : 4 + (h % 10);
-    var dia = 1 + ((k * 5 + h) % 26);
-    var d = new Date(HOJE.getFullYear(), HOJE.getMonth() - mesesAtras, dia);
-    if(d > HOJE){ d = new Date(HOJE.getFullYear(), HOJE.getMonth() - mesesAtras - 1, dia); }
-    a.d = d;
-  });
-  function dataCurta(d){
-    return ('0'+d.getDate()).slice(-2) + '/' + ('0'+(d.getMonth()+1)).slice(-2) + '/' + String(d.getFullYear()).slice(-2);
-  }
-  var PERIODOS = {
-    geral: {rot:'Classificação geral',  recorde:'Recorde da casa', ok:function(){ return true; }},
-    ano:   {rot:'Classificação do ano', recorde:'Melhor do ano',
-            ok:function(d){ return d.getFullYear() === HOJE.getFullYear(); }},
-    mes:   {rot:'Classificação do mês', recorde:'Melhor do mês',
-            ok:function(d){ return d.getFullYear() === HOJE.getFullYear() && d.getMonth() === HOJE.getMonth(); }}
-  };
-  var periodoAtual = 'geral';
-
-  /* ---------- cálculo ---------- */
-  function tempo(base, dist){
-    if(dist === 500)  return base;
-    if(dist === 1000) return base * 2 * 1.055;
-    return base * 4 * 1.115;
-  }
-  function fmt(sec){
-    var m = Math.floor(sec/60), r = sec - m*60;
-    return m + ':' + (r<10?'0':'') + r.toFixed(1);
-  }
-  function split(sec, dist){ return fmt(sec / (dist/500)); }
-  function watts(sec, dist){
-    var pm = sec / dist;
-    return Math.round(2.80 / (pm*pm*pm));
-  }
-  function selo(nomeUnidade){
-    var u = UMAP[nomeUnidade];
-    return '<span class="usel" style="--u:' + u.cor + '">' +
-             '<span class="usel__key">' + u.sigla + '</span>' + u.nome +
-           '</span>';
-  }
-
-  /* ---------- selects ---------- */
-  var selFaixa = document.getElementById('f-faixa');
-  FAIXAS.forEach(function(f){
-    var o = document.createElement('option'); o.value = f.id; o.textContent = f.label; selFaixa.appendChild(o);
-  });
-  var selUni = document.getElementById('f-uni');
-  var oAll = document.createElement('option'); oAll.value='__all'; oAll.textContent='Todas as unidades'; selUni.appendChild(oAll);
-  UNIDADES.forEach(function(u){
-    var o = document.createElement('option'); o.value=u.nome; o.textContent=u.nome + ' (' + u.sigla + ')'; selUni.appendChild(o);
-  });
-
-  /* ---------- render ---------- */
-  var lanesEl = document.getElementById('lanes');
-  var tableEl = document.getElementById('tablehost');
-  var duelEl  = document.getElementById('duel');
-  var duelBar = document.getElementById('duel-bar');
-  var duelSub = document.getElementById('duel-sub');
-
-  var TOP = 5; // quantos vão para o pódio de raias
-
-  function render(){
-    var sexo = document.getElementById('f-sexo').value;
-    var fx   = FAIXAS.filter(function(f){ return f.id === selFaixa.value; })[0];
-    var dist = parseInt(document.getElementById('f-dist').value, 10);
-    var uni  = selUni.value;
-
-    var per = PERIODOS[periodoAtual];
-
-    // base da categoria, ignorando o filtro de unidade
-    var categoria = ATLETAS
-      .filter(function(a){ return a.s === sexo && a.i >= fx.min && a.i <= fx.max && per.ok(a.d); })
-      .map(function(a){
-        var t = tempo(a.b, dist);
-        return {n:a.n, i:a.i, u:a.u, me:a.me, d:a.d, t:t, sp:split(t,dist), w:watts(t,dist)};
-      })
-      .sort(function(x,y){ return x.t - y.t; });
-
-    var lista = uni === '__all' ? categoria : categoria.filter(function(a){ return a.u === uni; });
-
-    /* contexto */
-    document.getElementById('ctx-eyebrow').textContent = per.rot;
-    document.getElementById('ctx-title').textContent =
-      (sexo === 'M' ? 'Masculino' : 'Feminino') + ' · ' + fx.label + ' · ' +
-      (dist === 500 ? '500m' : dist === 1000 ? '1.000m' : '2.000m') +
-      (uni === '__all' ? '' : ' · ' + uni);
-    document.getElementById('chip-n').innerHTML = '<b>' + lista.length + '</b> atletas';
-    document.getElementById('chip-rec').innerHTML =
-      per.recorde + ' <b>' + (categoria.length ? fmt(categoria[0].t) : '—') + '</b>';
-
-    /* ---- disputa entre unidades: legenda, distribuição e filtro num controle só ----
-       A barra sempre mostra a categoria inteira ("diluída"), independente do filtro.
-       Escolher uma cidade só destaca o pedaço dela e recolhe o ranking abaixo. */
-    duelBar.innerHTML = UNIDADES.map(function(u){
-      var q = categoria.filter(function(a){ return a.u === u.nome; }).length;
-      var selecionada = uni === u.nome;
-      return '<button type="button" class="duel__seg' + (q ? '' : ' duel__seg--vazio') + '"' +
-             ' style="--u:' + u.cor + ';flex:' + q + ' 1 46px"' +
-             ' data-unidade="' + u.nome + '"' +
-             ' aria-pressed="' + (selecionada ? 'true' : 'false') + '"' +
-             (q ? '' : ' disabled') +
-             ' title="' + u.nome + ': ' + q + ' de ' + categoria.length + ' na categoria">' +
-             '<span>' + u.sigla + ' ' + q + '</span></button>';
-    }).join('');
-    duelBar.classList.toggle('duel__bar--filtrado', uni !== '__all');
-    document.getElementById('duel-all').setAttribute('aria-pressed', uni === '__all' ? 'true' : 'false');
-    duelSub.textContent = uni === '__all'
-      ? 'Clique numa cidade para ver só ela'
-      : 'Mostrando só ' + uni + ' — toque em Todos para voltar';
-    document.getElementById('duel-lead').innerHTML = categoria.length
-      ? 'Melhor tempo: <b>' + fmt(categoria[0].t) + '</b> · ' + UMAP[categoria[0].u].sigla
-      : '';
-
-    /* raias — TOP 5 */
-    lanesEl.innerHTML = '';
-    if(!lista.length){
-      tableEl.innerHTML = '<div class="empty"><b>Nenhum tempo registrado</b>' +
-        'Ainda não há resultado para essa combinação. Ajuste o filtro ou peça ao professor para lançar.</div>';
-      return;
-    }
-    var lider = lista[0].t;
-    lista.slice(0, TOP).forEach(function(a, idx){
-      var gapSec = a.t - lider;
-      var pct = Math.max(24, 100 - (gapSec / lider) * 320);
-      var cor = UMAP[a.u].cor;
-      var el = document.createElement('article');
-      el.className = 'lane lane--' + (idx+1);
-      el.style.setProperty('--u', cor);
-      el.innerHTML =
-        '<div class="lane__pos">' + (idx+1) + '<small>RAIA</small></div>' +
-        '<div class="lane__body">' +
-          '<div class="lane__name">' + a.n +
-            (idx === 0 ? ' <span class="tag tag--rec">Recorde</span>' : '') +
-            (a.me ? ' <span class="tag tag--pr">Você</span>' : '') +
-          '</div>' +
-          '<div class="lane__meta">' +
-            selo(a.u) +
-            '<span class="mi"><i></i>' + a.i + ' anos</span>' +
-            '<span class="mi"><i></i>' + a.w + ' W médios</span>' +
-            '<span class="mi"><i></i>' + dataCurta(a.d) + '</span>' +
-            (gapSec > 0 ? '<span class="mi"><i></i>+' + gapSec.toFixed(1) + 's do líder</span>' : '') +
-          '</div>' +
-          '<div class="gap"><span class="gap__fill" style="width:' + pct.toFixed(1) + '%"></span></div>' +
-        '</div>' +
-        '<div class="lane__time"><b>' + fmt(a.t) + '</b><em>' + a.sp + ' /500m</em></div>';
-      lanesEl.appendChild(el);
-    });
-
-    /* tabela — do 6º em diante */
-    var resto = lista.slice(TOP);
-    if(!resto.length){
-      tableEl.innerHTML = '<div class="empty"><b>Todo mundo está no pódio</b>' +
-        'Essa categoria tem ' + lista.length + ' atleta(s) classificado(s) — cabem todos nas raias.</div>';
-      return;
-    }
-    var linhas = resto.map(function(a, k){
-      return '<tr class="' + (a.me ? 'me' : '') + '" style="--u:' + UMAP[a.u].cor + '">' +
-        '<td class="pos" data-l="Posição">' + (k + TOP + 1) + 'º</td>' +
-        '<td class="nome" data-l="Atleta">' + a.n + (a.me ? ' <span class="tag tag--pr">Você</span>' : '') + '</td>' +
-        '<td class="t" data-l="Tempo">' + fmt(a.t) + '</td>' +
-        '<td class="sec" data-l="Split /500m">' + a.sp + '</td>' +
-        '<td class="sec num" data-l="Watts">' + a.w + '</td>' +
-        '<td class="sec num" data-l="Idade">' + a.i + '</td>' +
-        '<td class="sec" data-l="Data">' + dataCurta(a.d) + '</td>' +
-        '<td data-l="Unidade">' + selo(a.u) + '</td>' +
-        '<td class="num" data-l="Dif. do líder"><span class="delta">+' + (a.t - lider).toFixed(1) + 's</span></td>' +
-      '</tr>';
-    }).join('');
-    tableEl.innerHTML =
-      '<table><thead><tr>' +
-        '<th>Pos</th><th>Atleta</th><th>Tempo</th><th>Split /500m</th>' +
-        '<th class="num">Watts</th><th class="num">Idade</th><th>Data</th>' +
-        '<th>Unidade</th><th class="num">Dif.</th>' +
-      '</tr></thead><tbody>' + linhas + '</tbody></table>';
-  }
-
-  ['f-sexo','f-faixa','f-dist','f-uni'].forEach(function(id){
-    document.getElementById(id).addEventListener('change', render);
-  });
-  document.getElementById('go').addEventListener('click', render);
-
-  /* clicar numa cidade da barra filtra; "Todos" volta pra visão diluída */
-  duelBar.addEventListener('click', function(ev){
-    var seg = ev.target.closest('.duel__seg');
-    if(!seg || seg.disabled) return;
-    var cidade = seg.dataset.unidade;
-    selUni.value = (selUni.value === cidade) ? '__all' : cidade; // reclicar desmarca
-    render();
-  });
-  document.getElementById('duel-all').addEventListener('click', function(){
-    selUni.value = '__all';
-    render();
-  });
-
-  /* recorte de período */
-  document.getElementById('periodo').addEventListener('click', function(ev){
-    var b = ev.target.closest('button[data-p]');
-    if(!b) return;
-    periodoAtual = b.dataset.p;
-    Array.prototype.forEach.call(this.querySelectorAll('button[data-p]'), function(x){
-      x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
-    });
-    render();
-  });
-
-  /* ---------- área do professor (mock) ---------- */
-  var pin = document.getElementById('pin'),
-      msg = document.getElementById('pinmsg'),
-      queue = document.getElementById('queue');
-
-  document.getElementById('unlock').addEventListener('click', function(){
-    if(pin.value.length < 4){
-      msg.className = 'msg msg--no';
-      msg.textContent = 'Digite os 4 dígitos do seu PIN.';
-      pin.focus();
-      return;
-    }
-    msg.className = 'msg msg--ok';
-    msg.textContent = 'Prof. Maurício · sessão aberta às ' +
-      new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    queue.hidden = false;
-  });
-  document.getElementById('approve').addEventListener('click', function(){
-    queue.querySelector('.queue').innerHTML =
-      '<div class="qitem" style="--u:var(--accent)"><div><b>2 tempos validados</b>' +
-      '<span>já estão no ranking</span></div></div>';
-  });
-  document.getElementById('lockback').addEventListener('click', function(){
-    queue.hidden = true; pin.value = ''; msg.textContent = ''; msg.className = 'msg';
-  });
-
-  render();
-})();
-</script>
-
-</body></html>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
+<script src="assets/app.js?v=6"></script>
+</body>
+</html>
