@@ -385,11 +385,12 @@
     F.s = $("#f-sexo").value; F.faixa = $("#f-faixa").value; F.dist = +$("#f-dist").value; F.uni = $("#f-uni").value;
   }
 
-  /* filtros do celular: tudo a um toque. Espelham os selects do desktop,
+  /* filtros a um toque (celular e desktop). Espelham os selects escondidos,
      que continuam sendo a fonte da verdade. */
   function montarFiltrosCelular() {
+    // "anos" só aparece no celular — no desktop o título "Faixa etária" já diz
     $("#mf-faixa").innerHTML = FAIXAS.map((f) =>
-      '<button type="button" class="chip-btn" data-mf-f="' + f.id + '">' + (f.id === "50+" ? "50+ anos" : f.label) + "</button>").join("");
+      '<button type="button" class="chip-btn" data-mf-f="' + f.id + '"><span>' + (f.id === "50+" ? "50+" : f.label.replace(" anos", "")) + '<span class="chip-anos"> anos</span></span></button>').join("");
     $("#mf-uni").innerHTML = '<button type="button" class="chip-btn" data-mf-u="__all">Todas as unidades</button>' +
       UNIDADES.map((u) => '<button type="button" class="chip-btn" data-mf-u="' + esc(u.nome) + '" style="--u:' + u.cor + '"><i></i>' + esc(u.nome) + "</button>").join("");
     $("#mf").addEventListener("click", (e) => {

@@ -195,11 +195,11 @@ main:focus{outline:none}
 .picker{display:flex;flex-direction:column;gap:7px;min-width:260px}
 
 /* ============================================================ HERO + CONSOLE */
-.hero{padding:44px 0 0;position:relative;overflow:hidden;--glow:var(--accent-wash)}
+.hero{padding:44px 0 0;position:relative;overflow:hidden;--glow:var(--accent-wash);transition:--glow .8s ease}
 .hero::before{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:
-    radial-gradient(680px 240px at 15% 0%, var(--accent-wash), transparent 70%),
+    radial-gradient(680px 240px at 15% 0%, var(--glow), transparent 70%),
     repeating-linear-gradient(180deg, transparent 0 38px, var(--line-soft) 38px 39px);
   opacity:.5;
   -webkit-mask-image:linear-gradient(180deg,#000 40%,transparent);
@@ -1149,8 +1149,21 @@ body{-webkit-tap-highlight-color:transparent}
    em botões grandes; idade e unidade em fileiras que deslizam para o lado.
    Depois, uma lista única: posição, nome, cidade e tempo. A cor da unidade
    vira só um pontinho. */
-.mf{display:none;flex-direction:column;gap:10px;margin-top:16px}
-.mf__seg{position:relative;isolation:isolate;display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+/* desktop: um painel só, com título em cada grupo e tudo à vista */
+.chip-anos{display:none}
+.mf{
+  display:grid;grid-template-columns:minmax(200px,230px) minmax(230px,260px) minmax(0,1fr);gap:18px 28px;
+  margin-top:30px;padding:18px 20px 20px;border-radius:var(--r-lg);position:relative;
+  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lg);
+}
+.mf__grp{display:flex;flex-direction:column;gap:9px;min-width:0}
+.mf__lbl{font-family:"IBM Plex Mono",monospace;font-size:.6875rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.mf__grp--uni{grid-column:1 / -1;padding-top:16px;border-top:1px solid var(--line-soft)}
+@media(max-width:1020px){
+  .mf{grid-template-columns:1fr 1fr}
+  .mf__grp--faixa{grid-column:1 / -1}
+}
+.mf__seg{position:relative;isolation:isolate;display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--ground);border:1px solid var(--line)}
 /* a pílula verde é uma só e desliza até o botão escolhido (--idx de --n) */
 .mf__seg::before{
   content:"";position:absolute;z-index:-1;top:4px;bottom:4px;border-radius:10px;
@@ -1161,26 +1174,22 @@ body{-webkit-tap-highlight-color:transparent}
   transition:left .5s var(--ease);
 }
 .mf__seg button{
-  flex:1;border:0;background:transparent;color:var(--ink-2);cursor:pointer;
-  padding:12px 6px;border-radius:10px;font-size:1rem;font-weight:500;transition:color .3s;
+  flex:1 1 0;min-width:0;border:0;background:transparent;color:var(--ink-2);cursor:pointer;white-space:nowrap;
+  padding:10px 8px;border-radius:10px;font-size:.9375rem;font-weight:500;transition:color .3s;
 }
+.mf__seg button:hover:not([aria-pressed="true"]){color:var(--ink)}
 .mf__seg button[aria-pressed="true"]{color:var(--on-accent);font-weight:700}
 .mf__seg button:focus-visible,.chip-btn:focus-visible{outline-offset:1px}
-/* fileiras de idade e unidade: rolam para o lado, a borda some em degradê para mostrar que tem mais */
-.mf__chips{
-  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px;
-  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 32px),transparent);
-          mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 32px),transparent);
-}
-.mf__chips::-webkit-scrollbar{display:none}
-.mf__chips::after{content:"";flex:0 0 8px}
+/* desktop: idade e unidade quebram linha se precisar; no celular rolam para o lado (abaixo) */
+.mf__chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip-btn{
   --c:var(--accent);
   position:relative;overflow:hidden;flex:none;display:inline-flex;align-items:center;gap:8px;
-  padding:10px 16px;border-radius:100px;cursor:pointer;margin-block:4px;
-  border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:.9375rem;white-space:nowrap;
-  transition:background .3s,border-color .3s,color .3s,box-shadow .3s;
+  padding:9px 15px;border-radius:100px;cursor:pointer;
+  border:1px solid var(--line);background:var(--ground);color:var(--ink-2);font-size:.875rem;white-space:nowrap;
+  transition:background .3s,border-color .3s,color .3s,box-shadow .3s,transform .2s;
 }
+.chip-btn:hover:not([aria-pressed="true"]){border-color:color-mix(in srgb, var(--c) 45%, var(--line));color:var(--ink)}
 .chip-btn[style*="--u"]{--c:var(--u)}
 .chip-btn i{width:8px;height:8px;border-radius:50%;background:var(--u);flex:none;transition:box-shadow .3s}
 /* escolhido: o botão acende na cor dele (verde nas idades, a cor da cidade nas unidades) */
@@ -1260,8 +1269,22 @@ body{-webkit-tap-highlight-color:transparent}
   .water__track{animation-duration:16s}
   .water__track--back{animation-duration:26s}
   .hero h1{font-size:1.625rem;margin:0}
-  .console{display:none}
-  .mf{display:flex}
+  /* filtros: sem painel nem títulos; botões grandes e fileiras que rolam para o lado,
+     com a borda sumindo em degradê para mostrar que tem mais */
+  .mf{display:flex;flex-direction:column;gap:10px;margin-top:16px;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+  .mf__grp{display:contents}
+  .mf__lbl{display:none}
+  .mf__seg{background:var(--surface)}
+  .mf__seg button{padding:12px 6px;font-size:1rem}
+  .mf__chips{
+    flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 32px),transparent);
+            mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 32px),transparent);
+  }
+  .mf__chips::-webkit-scrollbar{display:none}
+  .mf__chips::after{content:"";flex:0 0 8px}
+  .chip-btn{padding:10px 16px;margin-block:4px;font-size:.9375rem;background:var(--surface)}
+  .chip-anos{display:inline}
 
   /* contexto vira uma linha: quantos atletas e o período (o recorde já aparece na lista) */
   .ctx{margin:18px 0 10px;padding-bottom:0;border-bottom:0;gap:10px;flex-wrap:nowrap;justify-content:space-between}
