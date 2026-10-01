@@ -397,12 +397,26 @@ main:focus{outline:none}
   font-style:normal;display:block;margin-top:6px;font-family:"IBM Plex Mono",monospace;
   font-size:.6875rem;color:var(--muted);letter-spacing:.04em;
 }
+/* no celular a raia vira uma linha: posição · nome + unidade · tempo */
 @media(max-width:680px){
-  .lane{grid-template-columns:40px 1fr;gap:12px;padding:13px 14px 15px 18px}
-  .lane__pos{font-size:1.6rem}
-  .lane--1 .lane__pos{font-size:2rem}
-  .lane__time{grid-column:2;text-align:left;margin-top:4px}
-  .lane__time b,.lane--1 .lane__time b{font-size:1.5rem}
+  .lane{grid-template-columns:28px minmax(0,1fr) auto;gap:12px;padding:12px 14px 13px 16px;align-items:start}
+  .lane--1{padding-block:15px 16px}
+  .lane__pos{font-size:1.5rem;padding-top:1px}
+  .lane--1 .lane__pos{font-size:2.1rem}
+  .lane__pos small{display:none}
+  .lane__name{font-size:.9375rem;gap:6px;flex-wrap:nowrap;min-width:0}
+  .lane--1 .lane__name{font-size:1.0625rem}
+  .lane__name .alink{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .lane__name .tag{flex:none}
+  .lane__meta{margin-top:5px;gap:6px;flex-wrap:nowrap}
+  .lane__meta .mi:not(.mi--gap){display:none}
+  .lane__meta .usel{padding-right:2px;border:0;background:none}
+  .lane__meta .usel__n{display:none}
+  .lane__meta .mi--gap{white-space:nowrap;font-family:"IBM Plex Mono",monospace;font-size:.6875rem}
+  .lane__time b{font-size:1.25rem}
+  .lane--1 .lane__time b{font-size:1.55rem}
+  .lane__time em{display:none}
+  .gap{margin:10px 12px 0 0}
 }
 
 /* selo de unidade */
@@ -444,30 +458,43 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
 .empty b{display:block;font-family:Archivo,sans-serif;font-size:var(--step-1);color:var(--ink);margin-bottom:6px;font-weight:700}
 .empty .btn{margin-top:16px}
 
+/* no celular a tabela vira lista de cartões curtos — só o que importa:
+   posição · nome · unidade · tempo · diferença. Split, watts, idade e data ficam no desktop. */
 @media(max-width:640px){
-  .tablewrap{border:0;background:transparent;box-shadow:none;overflow-x:visible}
-  table{min-width:0}
+  .tablewrap{border:0;background:transparent;box-shadow:none;overflow:visible}
+  table{min-width:0;display:block}
   thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  tbody{display:flex;flex-direction:column;gap:6px}
   tbody tr{
-    display:grid;grid-template-columns:auto 1fr;gap:2px 10px;
-    border:1px solid var(--line);border-left:4px solid var(--u, var(--line));border-radius:var(--r-md);
-    background:var(--surface);padding:12px 14px;margin-bottom:8px;
+    display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:4px 10px;
+    padding:10px 14px 10px 12px;border:1px solid var(--line);border-left:4px solid var(--u, var(--line));
+    border-radius:12px;background:var(--surface);
   }
+  tbody tr:hover{background:var(--surface)}
   tbody tr td{border:0;padding:0;font-size:.8125rem}
   tbody tr td:first-child{box-shadow:none}
-  td.pos{grid-column:1;grid-row:1;font-size:1.0625rem;font-weight:700;color:var(--ink);align-self:center;width:auto}
-  td.nome{grid-column:2;grid-row:1;font-size:.9375rem;align-self:center;white-space:normal}
-  tbody tr td:not(.pos):not(.nome){
-    grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;
-    gap:12px;padding:5px 0;border-top:1px solid var(--line-soft);
-  }
-  tbody tr td:not(.pos):not(.nome)::before{
-    content:attr(data-l);color:var(--muted);font-family:"IBM Plex Mono",monospace;
-    font-size:.625rem;letter-spacing:.1em;text-transform:uppercase;
-  }
-  tbody tr td.num{text-align:right}
-  .tablewrap--flat tbody tr{background:var(--surface-2)}
+  td.pos{grid-column:1;grid-row:1 / 3;font-size:1rem;font-weight:700;color:var(--ink);width:auto}
+  td.nome{grid-column:2;grid-row:1;font-size:.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  td.t{grid-column:3;grid-row:1;text-align:right;font-size:.9375rem}
+  td.uni{grid-column:2;grid-row:2;line-height:1}
+  td.uni .usel{font-size:.625rem;padding:1px 7px 1px 2px}
+  td.uni .usel__key{min-width:24px;height:14px;font-size:.5rem}
+  td.dif{grid-column:3;grid-row:2;text-align:right;line-height:1}
+  td.sec{display:none}
+  tbody tr.me{background:color-mix(in srgb, var(--accent) 9%, var(--surface))}
+
+  /* histórico do atleta: distância + data à esquerda, tempo + marca à direita */
+  .tablewrap--flat tbody tr{background:var(--surface-2);border-color:var(--line-soft)}
+  .hist tbody tr{grid-template-columns:minmax(0,1fr) auto;padding:10px 14px}
+  .hist td.nome{grid-column:1;grid-row:1;font-weight:600}
+  .hist td.pos{grid-column:1;grid-row:2;font-family:"IBM Plex Mono",monospace;font-size:.6875rem;font-weight:400;color:var(--muted)}
+  .hist td.t{grid-column:2;grid-row:1}
+  .hist td.marca{grid-column:2;grid-row:2;text-align:right;line-height:1}
+  .hist td.marca .tag--muted{display:none}
+  .hist:not(.is-open) tr.xtra{display:none}
 }
+.histmore{display:none;margin-top:10px}
+@media(max-width:640px){.histmore{display:flex}}
 
 /* ============================================================ LAYOUT + CARDS */
 .split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:26px;align-items:start;margin-top:26px}
@@ -609,11 +636,18 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
   .profile{grid-template-columns:auto 1fr}
   .ptiles{grid-column:1/-1;grid-template-columns:repeat(4,1fr)}
 }
+/* celular: anel ao lado do nome, como cabeçalho de app; números embaixo */
 @media(max-width:620px){
-  .profile{grid-template-columns:1fr;justify-items:center;text-align:center;padding:26px 18px}
-  .profile__meta{justify-content:center}
-  .xp{margin-inline:auto}
-  .ptiles{grid-template-columns:1fr 1fr;width:100%;text-align:left}
+  .profile{grid-template-columns:84px minmax(0,1fr);align-items:start}
+  .profile::after{display:none}
+  .ring{width:84px;height:84px;margin-top:4px}
+  .ring__in{width:74px;height:74px}
+  .ring__av{width:62px;height:62px;font-size:1.125rem}
+  .ring__lvl{font-size:.5rem;padding:2px 7px;bottom:-7px}
+  .profile .eyebrow{font-size:.5625rem;letter-spacing:.12em}
+  .profile__meta{gap:6px 8px;font-size:.75rem}
+  .profile__meta .dot{display:none}
+  .ptiles{grid-column:1/-1;grid-template-columns:1fr 1fr;width:100%}
 }
 
 .pgrid{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;margin-top:18px;align-items:stretch}
@@ -748,7 +782,7 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
 .profsel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:20px 0 6px;text-align:left}
 .profopt{
   --u:var(--muted);
-  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;cursor:pointer;
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;cursor:pointer;text-align:left;
   border:1px solid var(--line);background:var(--surface-2);color:inherit;transition:border-color .2s,background .2s;
 }
 .profopt:hover{border-color:color-mix(in srgb, var(--u) 50%, var(--line))}
@@ -998,6 +1032,121 @@ select.input option,select.input optgroup{background:var(--surface);color:var(--
 @keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.97)}}
 @keyframes toastOut{to{opacity:0;transform:translateX(30px)}}
 .confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:140}
+
+/* ============================================================ CELULAR
+   Menos coisa por tela: títulos menores, margens de 16px, filtros que
+   aplicam sozinhos, conquistas em carrossel e cartões mais curtos. */
+body{-webkit-tap-highlight-color:transparent}
+@media(max-width:640px){
+  .wrap{padding-inline:16px}
+  .topbar__in{height:56px;gap:12px}
+  .brand__mark{width:40px;height:30px}
+  .brand__txt b{font-size:.875rem}
+  .brand__txt span{font-size:.5625rem}
+  .themebtn{width:34px;height:34px}
+
+  .phead{padding:22px 0 16px}
+  .phead h1{font-size:1.875rem;margin:10px 0 8px}
+  .phead h1 br,.hero h1 br{display:none}
+  .phead > p:last-child{font-size:.9375rem}
+  .phead--row{gap:14px}
+  .picker{min-width:0;width:100%}
+
+  /* ranking */
+  .hero{padding-top:20px}
+  .hero h1{font-size:2rem;margin:10px 0 8px}
+  .hero__sub{font-size:.9375rem}
+  .console{margin-top:18px;border-radius:14px}
+  .fld{padding:10px 14px;gap:3px}
+  .fld select{font-size:.9375rem}
+  .console__go{display:none}
+  .water{height:44px}
+  .ctx{margin:22px 0 14px;gap:8px;padding-bottom:14px}
+  .ctx h2{font-size:1.125rem;width:100%;margin:0}
+  .ctx .seg{order:3;width:100%}
+  .ctx .seg button{flex:1;padding-block:7px}
+  .duel{padding:12px 14px 13px;margin-bottom:12px}
+  .duel__head{margin-bottom:10px}
+  .duel__bar{height:30px}
+  #duel-sub{display:none}
+  .duel__foot{justify-content:flex-end}
+  .lanes{gap:6px}
+  .split{margin-top:16px;gap:16px}
+  .side{gap:14px}
+  .side .cta-card{display:none}
+  .card{padding:16px;border-radius:14px}
+  .card__hint{margin-bottom:12px}
+
+  /* meu progresso */
+  .profile{padding:18px 16px 16px;gap:16px 14px;border-radius:18px}
+  .profile__id h2{font-size:1.375rem;margin:4px 0 8px;line-height:1.05}
+  .xp{margin-top:12px}
+  .xp__top b{font-size:.8125rem}
+  .xp__top span{font-size:.6875rem}
+  .xp__rules{display:none}
+  .ptiles{gap:8px}
+  .ptile{padding:10px 12px;border-radius:12px}
+  .ptile b{font-size:1.25rem;display:inline-block;margin-top:4px}
+  .ptile small{margin-left:4px}
+  .pgrid{margin-top:14px;gap:14px}
+  .pgrid > div{gap:14px}
+  .stack{margin-top:14px;gap:14px}
+  .tlane{height:74px}
+  .chart__legend{gap:12px}
+  .bgrid{
+    display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;
+    margin:0 -16px;padding:2px 16px 6px;scrollbar-width:none;
+  }
+  .bgrid::-webkit-scrollbar{display:none}
+  .bdg{flex:0 0 150px;scroll-snap-align:start;padding:14px 12px 12px}
+  .bdg p{display:none}
+  .bdg__ico{width:40px;height:40px;margin-bottom:10px}
+
+  /* área do professor: o cartão do PIN já explica, então o título fica sozinho */
+  [data-view="professor"] .phead h1{font-size:1.625rem}
+  [data-view="professor"] .phead > p:last-child{display:none}
+  .gate{padding:22px 16px 18px;border-radius:20px}
+  .gate__lock{width:54px;height:54px;border-radius:16px;margin-bottom:12px}
+  .gate h2{font-size:1.25rem}
+  .profsel{margin-top:16px}
+  .profopt{padding:8px}
+  .dots{margin:18px 0 16px}
+  .key{height:54px;border-radius:13px}
+  .dash__head{display:grid;grid-template-columns:44px minmax(0,1fr);padding:14px;gap:12px}
+  .dash__head .avatar--lg{width:44px;height:44px;font-size:.9375rem}
+  .dash__who b{font-size:1rem}
+  .dash__actions{grid-column:1/-1}
+  .dash__actions .btn{flex:1}
+  .kpis{gap:8px;margin:12px 0 14px}
+  .kpi{padding:10px 12px}
+  .kpi b{font-size:1.375rem}
+  .dgrid{gap:14px}
+  .timebox{grid-template-columns:1fr;gap:8px}
+  .timebox__aux{flex-direction:row;justify-content:space-between;min-width:0;padding:9px 12px}
+  .timebox__aux span{gap:8px}
+  .qitem{padding:10px 10px 10px 12px;gap:10px}
+  .qitem .t{font-size:.9375rem}
+  .ibtn{width:32px;height:32px}
+  .log::before{left:50px}
+  .log li{grid-template-columns:40px 1fr;gap:20px}
+  .log li::before{left:47px}
+
+  /* escopo */
+  .front{padding:22px 18px 20px;border-radius:18px}
+  .front__n{font-size:4.25rem;right:12px}
+  .front h3{font-size:1.5rem}
+  .sec{margin-top:44px}
+  .sec > h2{margin-bottom:18px}
+  .rule{padding:16px}
+  .cta{padding:22px 18px;margin-top:44px;border-radius:18px}
+  .cta .btn{width:100%}
+
+  .foot{margin-top:32px;justify-content:center;text-align:center;padding-bottom:20px}
+}
+/* toque não tem "passar o mouse": nada de cartão que fica deslocado depois do toque */
+@media (hover:none){
+  .lane:hover,.bdg:hover,.front:hover,.rec:hover,.posrow:hover{transform:none}
+}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;transition-delay:0s !important}

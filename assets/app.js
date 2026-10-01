@@ -283,7 +283,7 @@
   }
 
   /* ---------- peças de interface ---------- */
-  const selo = (nome) => { const u = UMAP[nome]; return '<span class="usel" style="--u:' + u.cor + '"><span class="usel__key">' + u.sigla + "</span>" + esc(u.nome) + "</span>"; };
+  const selo = (nome) => { const u = UMAP[nome]; return '<span class="usel" style="--u:' + u.cor + '"><span class="usel__key">' + u.sigla + '</span><span class="usel__n">' + esc(u.nome) + "</span></span>"; };
   const linkAtleta = (a, txt) => '<a class="alink" href="#/progresso/' + a.id + '">' + esc(txt || a.n) + "</a>";
   const rankLink = (s, faixa, dist, txt) => '<a href="#/ranking" data-rank="' + s + "|" + faixa + "|" + dist + '">' + txt + "</a>";
 
@@ -418,7 +418,7 @@
         '<span class="mi"><i></i>' + r.a.i + " anos</span>" +
         '<span class="mi"><i></i>' + r.w + " W médios</span>" +
         '<span class="mi"><i></i>' + dataCurta(r.d) + "</span>" +
-        (gap > 0 ? '<span class="mi"><i></i>+' + gap.toFixed(1) + "s do líder</span>" : "") + "</div>" +
+        (gap > 0 ? '<span class="mi mi--gap"><i></i>+' + gap.toFixed(1) + "s do líder</span>" : "") + "</div>" +
         '<div class="gap"><span class="gap__fill" style="--w:' + pct.toFixed(1) + '%"><span class="boat">' + BARCO + "</span></span></div></div>" +
         '<div class="lane__time"><b>' + fmt(r.t) + "</b><em>" + r.sp + " /500m</em></div></article>";
     }).join("");
@@ -439,8 +439,8 @@
           '<td class="sec num" data-l="Watts">' + r.w + "</td>" +
           '<td class="sec num" data-l="Idade">' + r.a.i + "</td>" +
           '<td class="sec" data-l="Data">' + dataCurta(r.d) + "</td>" +
-          '<td data-l="Unidade">' + selo(r.a.u) + "</td>" +
-          '<td class="num" data-l="Dif. do líder"><span class="delta">+' + (r.t - lider).toFixed(1) + "s</span></td></tr>"
+          '<td class="uni" data-l="Unidade">' + selo(r.a.u) + "</td>" +
+          '<td class="num dif" data-l="Dif. do líder"><span class="delta">+' + (r.t - lider).toFixed(1) + "s</span></td></tr>"
         ).join("") + "</tbody></table>";
     }
     renderLateral();
@@ -574,7 +574,7 @@
       (desde ? '<span class="dot"></span><span>no studio desde ' + desde + "</span>" : "") + "</div>" +
       '<div class="xp"><div class="xp__top"><b>' + P.nivelNome + "</b><span>" + P.xp.toLocaleString("pt-BR") + (P.prox ? " / " + P.prox.min.toLocaleString("pt-BR") : "") + " XP</span></div>" +
       '<div class="xp__bar"><i style="--w:' + (P.xpPct * 100).toFixed(1) + '%"></i></div>' +
-      '<p class="xp__hint">' + (P.prox ? "Faltam <b>" + (P.prox.min - P.xp).toLocaleString("pt-BR") + " XP</b> para <b>" + P.prox.n + "</b> · teste = 40 · recorde pessoal = 90 · conquista = 150"
+      '<p class="xp__hint">' + (P.prox ? "Faltam <b>" + (P.prox.min - P.xp).toLocaleString("pt-BR") + " XP</b> para <b>" + P.prox.n + '</b><span class="xp__rules"> · teste = 40 · recorde pessoal = 90 · conquista = 150</span>'
         : "Nível máximo. Agora é defender o posto.") + "</p></div></div>";
 
     if (!P.n) {
@@ -595,7 +595,7 @@
 
     /* gráfico + alvo + posições */
     html += '<div class="pgrid"><section class="card spot rise" style="--d:1">' +
-      '<div class="card__head"><div><h3>Evolução</h3><p class="card__hint">Quanto mais alto, mais rápido · pontos dourados = recorde pessoal</p></div>' +
+      '<div class="card__head"><div><h3>Evolução</h3><p class="card__hint">Mais alto = mais rápido · dourado = recorde pessoal</p></div>' +
       '<div class="seg" id="pg-dist" role="group" aria-label="Distância do gráfico">' +
       [500, 1000, 2000].map((d) => '<button type="button" data-d="' + d + '" aria-pressed="' + (d === pgDist) + '"' + (P.porDist[d].length ? "" : " disabled") + ">" + distLbl(d) + "</button>").join("") +
       '</div></div><div class="chart" id="pg-chart" style="--u:' + u.cor + '"></div>' +
@@ -617,16 +617,18 @@
     /* histórico */
     const hist = P.ts.slice().reverse();
     html += '<section class="card rise" style="--d:4"><div class="card__head"><div><h3>Histórico de testes</h3><p class="card__hint">' + P.n + " testes · todos validados por professor</p></div></div>" +
-      '<div class="tablewrap tablewrap--flat" style="box-shadow:none"><table><thead><tr><th>Data</th><th>Distância</th><th>Tempo</th><th>Split /500m</th><th class="num">Watts</th><th>Marca</th><th>Validado por</th></tr></thead><tbody>' +
-      hist.map((t, k) => '<tr style="--u:' + u.cor + ";--i:" + Math.min(k, 12) + '">' +
+      '<div class="tablewrap tablewrap--flat" style="box-shadow:none"><table class="hist" id="pg-hist"><thead><tr><th>Data</th><th>Distância</th><th>Tempo</th><th>Split /500m</th><th class="num">Watts</th><th>Marca</th><th>Validado por</th></tr></thead><tbody>' +
+      hist.map((t, k) => '<tr class="' + (k >= 5 ? "xtra" : "") + '" style="--u:' + u.cor + ";--i:" + Math.min(k, 12) + '">' +
         '<td class="pos" data-l="Data">' + dataCurta(t.d) + "</td>" +
         '<td class="nome" data-l="Distância">' + distLbl(t.dist) + "</td>" +
         '<td class="t" data-l="Tempo">' + fmt(t.t) + "</td>" +
         '<td class="sec" data-l="Split /500m">' + split(t.t, t.dist) + "</td>" +
         '<td class="sec num" data-l="Watts">' + watts(t.t, t.dist) + "</td>" +
-        '<td data-l="Marca">' + (P.prIds[t.id] ? '<span class="tag tag--pr">Recorde pessoal</span>' : t.t === P.best[t.dist] ? '<span class="tag tag--pr">Melhor marca</span>' : '<span class="tag tag--muted">—</span>') + "</td>" +
+        '<td class="marca" data-l="Marca">' + (P.prIds[t.id] ? '<span class="tag tag--pr">Recorde pessoal</span>' : t.t === P.best[t.dist] ? '<span class="tag tag--pr">Melhor marca</span>' : '<span class="tag tag--muted">—</span>') + "</td>" +
         '<td class="sec" data-l="Validado por">' + esc(curto(t.prof || "")) + "</td></tr>").join("") +
-      "</tbody></table></div></section></div>";
+      "</tbody></table></div>" +
+      (hist.length > 5 ? '<button type="button" class="btn btn--ghost btn--block histmore" data-hist>Ver os ' + hist.length + " testes</button>" : "") +
+      "</section></div>";
 
     $("#pg").innerHTML = html;
     contar($("#pg"));
@@ -682,7 +684,8 @@
       box.innerHTML = '<p class="chart__msg">' + (lista.length ? "Só um teste de " + distLbl(pgDist) + " até agora (" + fmt(lista[0].t) + "). O gráfico aparece a partir do segundo." : "Sem testes nessa distância.") + "</p>";
       return;
     }
-    const W = 640, H = 290, pl = 50, pr = 18, pt = 18, pb = 30;
+    // desenha na largura real do cartão: no celular os rótulos não encolhem
+    const W = Math.max(280, Math.round(box.clientWidth || 640)), H = W < 520 ? 220 : Math.round(W * 0.45), pl = 50, pr = 18, pt = 18, pb = 30;
     const ts = lista.map((t) => t.t), tmin = Math.min.apply(null, ts), tmax = Math.max.apply(null, ts);
     const pad = Math.max(0.6, (tmax - tmin) * 0.18), lo = tmin - pad, hi = tmax + pad;
     const x0 = lista[0].d.getTime(), x1 = Math.max(lista[lista.length - 1].d.getTime(), x0 + DIA);
@@ -742,6 +745,12 @@
 
   function ligarProgresso() {
     $("#pg").addEventListener("click", (ev) => {
+      const mais = ev.target.closest("[data-hist]");
+      if (mais) {
+        const aberto = $("#pg-hist").classList.toggle("is-open");
+        mais.textContent = aberto ? "Mostrar menos" : "Ver os " + $$("#pg-hist tbody tr").length + " testes";
+        return;
+      }
       const b = ev.target.closest("#pg-dist button[data-d]");
       if (!b || b.disabled) return;
       pgDist = +b.dataset.d;
@@ -765,7 +774,7 @@
       '<p class="card__hint">Demonstração: qualquer PIN de 4 dígitos entra.</p>' +
       '<div class="profsel" role="radiogroup" aria-label="Professor">' +
       UNIDADES.map((u, i) => '<button type="button" class="profopt" role="radio" aria-checked="' + (i === profSel) + '" data-p="' + i + '" style="--u:' + u.cor + '">' +
-        '<span class="avatar" style="--u:' + u.cor + '">' + iniciais(u.prof) + "</span><span><b>" + esc(curto(u.prof)) + "</b><small>" + u.sigla + " · " + esc(u.nome) + "</small></span></button>").join("") +
+        '<span class="avatar" style="--u:' + u.cor + '">' + iniciais(u.prof) + "</span><span><b>" + esc(curto(u.prof)) + "</b><small>" + esc(u.nome) + "</small></span></button>").join("") +
       "</div>" +
       '<div class="dots" id="dots" role="img" aria-label="0 de 4 dígitos"><i></i><i></i><i></i><i></i></div>' +
       '<div class="keypad" id="keypad">' +
@@ -861,7 +870,8 @@
     }
     box.innerHTML = '<div class="queue">' + fila.map((x, i) => {
       const a = AMAP[x.a];
-      return '<div class="qitem" style="--u:' + UMAP[a.u].cor + ";--i:" + i + '" data-id="' + x.id + '"><div><b>' + esc(a.n) + "</b><span>" + distLbl(x.dist) + " · " + esc(x.via) + " · " + quando(new Date(x.d)) + "</span></div>" +
+      const origem = /^Tablet/.test(x.via) ? "Tablet " + UMAP[a.u].sigla : esc(x.via);
+      return '<div class="qitem" style="--u:' + UMAP[a.u].cor + ";--i:" + i + '" data-id="' + x.id + '"><div><b>' + esc(a.n) + "</b><span>" + distLbl(x.dist) + " · " + origem + " · " + quando(new Date(x.d)) + "</span></div>" +
         '<span class="t">' + fmt(x.t) + "</span>" +
         '<div class="qitem__act"><button type="button" class="ibtn ibtn--ok" data-ok="' + x.id + '" aria-label="Validar ' + esc(a.n) + '" title="Validar">' + ic("check") + "</button>" +
         '<button type="button" class="ibtn ibtn--no" data-no="' + x.id + '" aria-label="Recusar ' + esc(a.n) + '" title="Recusar">' + ic("x") + "</button></div></div>";
