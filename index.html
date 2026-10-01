@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=9">
+<link rel="stylesheet" href="assets/styles.css?v=10">
 <script>try{var t=localStorage.getItem('srg-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
@@ -74,11 +74,11 @@
         <!-- celular: tudo a um toque — categoria e distância em botões grandes,
              idade e unidade em fileiras que deslizam para o lado -->
         <div class="mf rise" style="--d:2" id="mf">
-          <div class="mf__seg" role="group" aria-label="Categoria">
+          <div class="mf__seg" role="group" aria-label="Categoria" style="--n:2">
             <button type="button" data-mf-s="M" aria-pressed="true">Masculino</button>
             <button type="button" data-mf-s="F" aria-pressed="false">Feminino</button>
           </div>
-          <div class="mf__seg" role="group" aria-label="Distância">
+          <div class="mf__seg" role="group" aria-label="Distância" style="--n:2">
             <button type="button" data-mf-d="500" aria-pressed="true">500 metros</button>
             <button type="button" data-mf-d="1000" aria-pressed="false">1.000 metros</button>
           </div>
@@ -344,6 +344,6 @@
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
-<script src="assets/app.js?v=9"></script>
+<script src="assets/app.js?v=10"></script>
 </body>
 </html>

@@ -7,6 +7,7 @@
    · posição no ranking = número + tamanho, nunca cor.
    ============================================================ */
 @property --p { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --glow { syntax: "<color>"; inherits: true; initial-value: transparent; }
 
 :root{
   --ground:#0A1310;
@@ -194,7 +195,7 @@ main:focus{outline:none}
 .picker{display:flex;flex-direction:column;gap:7px;min-width:260px}
 
 /* ============================================================ HERO + CONSOLE */
-.hero{padding:44px 0 0;position:relative;overflow:hidden}
+.hero{padding:44px 0 0;position:relative;overflow:hidden;--glow:var(--accent-wash)}
 .hero::before{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:
@@ -1149,12 +1150,22 @@ body{-webkit-tap-highlight-color:transparent}
    Depois, uma lista única: posição, nome, cidade e tempo. A cor da unidade
    vira só um pontinho. */
 .mf{display:none;flex-direction:column;gap:10px;margin-top:16px}
-.mf__seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.mf__seg{position:relative;isolation:isolate;display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+/* a pílula verde é uma só e desliza até o botão escolhido (--idx de --n) */
+.mf__seg::before{
+  content:"";position:absolute;z-index:-1;top:4px;bottom:4px;border-radius:10px;
+  width:calc((100% - 8px - (var(--n, 2) - 1) * 4px) / var(--n, 2));
+  left:calc(4px + var(--idx, 0) * ((100% - 8px - (var(--n, 2) - 1) * 4px) / var(--n, 2) + 4px));
+  background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, #fff), var(--accent));
+  box-shadow:0 8px 20px -8px var(--accent), inset 0 1px 0 rgba(255,255,255,.35);
+  transition:left .5s var(--ease);
+}
 .mf__seg button{
   flex:1;border:0;background:transparent;color:var(--ink-2);cursor:pointer;
-  padding:12px 6px;border-radius:10px;font-size:1rem;font-weight:500;transition:background .2s,color .2s;
+  padding:12px 6px;border-radius:10px;font-size:1rem;font-weight:500;transition:color .3s;
 }
-.mf__seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+.mf__seg button[aria-pressed="true"]{color:var(--on-accent);font-weight:700}
+.mf__seg button:focus-visible,.chip-btn:focus-visible{outline-offset:1px}
 /* fileiras de idade e unidade: rolam para o lado, a borda some em degradê para mostrar que tem mais */
 .mf__chips{
   display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px;
@@ -1164,13 +1175,43 @@ body{-webkit-tap-highlight-color:transparent}
 .mf__chips::-webkit-scrollbar{display:none}
 .mf__chips::after{content:"";flex:0 0 8px}
 .chip-btn{
-  flex:none;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:100px;cursor:pointer;
+  --c:var(--accent);
+  position:relative;overflow:hidden;flex:none;display:inline-flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:100px;cursor:pointer;margin-block:4px;
   border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:.9375rem;white-space:nowrap;
-  transition:background .2s,border-color .2s,color .2s;
+  transition:background .3s,border-color .3s,color .3s,box-shadow .3s;
 }
-.chip-btn i{width:8px;height:8px;border-radius:50%;background:var(--u);flex:none}
-.chip-btn[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);color:var(--accent);font-weight:600}
+.chip-btn[style*="--u"]{--c:var(--u)}
+.chip-btn i{width:8px;height:8px;border-radius:50%;background:var(--u);flex:none;transition:box-shadow .3s}
+/* escolhido: o botão acende na cor dele (verde nas idades, a cor da cidade nas unidades) */
+.chip-btn[aria-pressed="true"]{
+  background:color-mix(in srgb, var(--c) 14%, var(--surface));border-color:var(--c);color:var(--ink);font-weight:600;
+}
+/* a unidade escolhida é o momento de brilho: halo e sombra na cor da cidade */
+.chip-btn[style*="--u"][aria-pressed="true"]{
+  background:color-mix(in srgb, var(--c) 20%, var(--surface));
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 18%, transparent), 0 10px 26px -10px var(--c);
+}
+.chip-btn[aria-pressed="true"] i{box-shadow:0 0 0 3px color-mix(in srgb, var(--u) 28%, transparent), 0 0 12px var(--u)}
+/* ao tocar: pulinho + um brilho passando, como o reflexo das barras no desktop */
+.chip-btn.is-pop{animation:pop .5s var(--ease)}
+.chip-btn.is-pop::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.38) 50%,transparent 70%);
+  transform:translateX(-120%);animation:sweep .85s var(--ease) forwards;
+}
+@keyframes pop{35%{transform:scale(1.07)}}
+@keyframes sweep{to{transform:translateX(120%)}}
 .rlist{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+/* filtrando por unidade: a lista ganha um contorno luminoso na cor da cidade */
+.rlist--uni{
+  border-color:color-mix(in srgb, var(--u) 50%, var(--line));
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--u) 22%, transparent), 0 18px 44px -24px var(--u);
+  animation:acende .7s var(--ease) backwards;
+}
+@keyframes acende{from{box-shadow:0 0 0 0 transparent, 0 0 0 0 transparent;border-color:var(--line)}}
+.rlist--uni .rrow__who small i{box-shadow:0 0 8px var(--u)}
+.rlist--uni li:first-child .rrow:not(.rrow--lead) .rrow__pos{background:var(--u);color:var(--ground-deep);box-shadow:0 0 14px -2px var(--u)}
 .rlist li + li{border-top:1px solid var(--line-soft)}
 .rrow{
   display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;
@@ -1182,8 +1223,14 @@ body{-webkit-tap-highlight-color:transparent}
   width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
   background:var(--surface-3);color:var(--ink-2);font-family:Archivo,sans-serif;font-weight:800;font-size:1rem;
 }
-.rrow--lead{background:linear-gradient(90deg,var(--brass-wash),transparent 75%)}
-.rrow--lead .rrow__pos{background:var(--brass);color:#1A1206}
+.rrow--lead{position:relative;overflow:hidden;background:linear-gradient(90deg,var(--brass-wash),transparent 75%)}
+.rrow--lead .rrow__pos{background:var(--brass);color:#1A1206;box-shadow:0 0 0 4px var(--brass-wash), 0 0 16px -2px var(--brass)}
+/* o reflexo dourado do recordista, igual ao da raia 1 no desktop */
+.rrow--lead::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 40%,color-mix(in srgb, var(--brass) 20%, transparent) 50%,transparent 60%);
+  transform:translateX(-100%);animation:shine 5.5s var(--ease) 1s infinite;
+}
 .rrow--me{background:var(--accent-wash)}
 .rrow__who{min-width:0}
 .rrow__who b{display:block;font-size:1.0625rem;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1197,10 +1244,21 @@ body{-webkit-tap-highlight-color:transparent}
 
 /* tudo aqui mexe só em peças que existem na página de ranking */
 @media(max-width:640px){
-  /* topo: só o título e os filtros simples */
-  .water,.hero::before{display:none}
+  /* topo: só o título e os filtros simples — com a onda passando por trás do título
+     e as raias de fundo tingidas pela unidade escolhida (--glow troca de cor devagar) */
   .hero > .wrap > .eyebrow,.hero__sub{display:none}
-  .hero{padding-top:20px}
+  .hero{padding-top:20px;transition:--glow .8s ease}
+  .hero::before{
+    opacity:.85;
+    background:
+      radial-gradient(460px 280px at 16% 0%, var(--glow), transparent 70%),
+      repeating-linear-gradient(180deg, transparent 0 34px, var(--line-soft) 34px 35px);
+    -webkit-mask-image:linear-gradient(180deg,#000 30%,transparent 92%);
+            mask-image:linear-gradient(180deg,#000 30%,transparent 92%);
+  }
+  .water{top:40px;bottom:auto;height:62px;opacity:.8}
+  .water__track{animation-duration:16s}
+  .water__track--back{animation-duration:26s}
   .hero h1{font-size:1.625rem;margin:0}
   .console{display:none}
   .mf{display:flex}

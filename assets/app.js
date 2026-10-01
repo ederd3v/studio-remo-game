@@ -363,7 +363,9 @@
 
   function listaSimples(lista, categoria) {
     const lider = lista[0].t;
-    return '<ol class="rlist">' + lista.map((r, i) => {
+    // filtrando por unidade, a lista acende na cor dela
+    const uni = F.uni === "__all" ? null : UMAP[F.uni];
+    return '<ol class="rlist' + (uni ? " rlist--uni" : "") + '"' + (uni ? ' style="--u:' + uni.cor + '"' : "") + ">" + lista.map((r, i) => {
       const gap = r.t - lider, ehRec = i === 0 && r === categoria[0];
       // dourado só para quem tem o recorde da categoria; líder de um recorte por unidade fica neutro
       return '<li><a class="rrow' + (ehRec ? " rrow--lead" : "") + (r.a.me ? " rrow--me" : "") + '" href="#/progresso/' + r.a.id + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + Math.min(i, 12) + '">' +
@@ -389,7 +391,7 @@
     $("#mf-faixa").innerHTML = FAIXAS.map((f) =>
       '<button type="button" class="chip-btn" data-mf-f="' + f.id + '">' + (f.id === "50+" ? "50+ anos" : f.label) + "</button>").join("");
     $("#mf-uni").innerHTML = '<button type="button" class="chip-btn" data-mf-u="__all">Todas as unidades</button>' +
-      UNIDADES.map((u) => '<button type="button" class="chip-btn" data-mf-u="' + esc(u.nome) + '"><i style="--u:' + u.cor + '"></i>' + esc(u.nome) + "</button>").join("");
+      UNIDADES.map((u) => '<button type="button" class="chip-btn" data-mf-u="' + esc(u.nome) + '" style="--u:' + u.cor + '"><i></i>' + esc(u.nome) + "</button>").join("");
     $("#mf").addEventListener("click", (e) => {
       const b = e.target.closest("button");
       if (!b) return;
@@ -399,6 +401,11 @@
       else if (b.dataset.mfU) $("#f-uni").value = b.dataset.mfU;
       else return;
       renderRanking();
+      // o botão tocado dá um pulinho com um brilho passando por ele
+      if (b.classList.contains("chip-btn") && !REDUZ) {
+        b.classList.remove("is-pop"); void b.offsetWidth; b.classList.add("is-pop");
+        setTimeout(() => b.classList.remove("is-pop"), 900);
+      }
     });
   }
   // o botão escolhido sempre fica à vista na fileira
@@ -416,6 +423,14 @@
     $$("[data-mf-u]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mfU === F.uni)));
     trazerParaVista($("#mf-faixa"), $('#mf-faixa [aria-pressed="true"]'));
     trazerParaVista($("#mf-uni"), $('#mf-uni [aria-pressed="true"]'));
+    // a pílula verde desliza até o botão escolhido
+    $$("#mf .mf__seg").forEach((seg) => {
+      const bs = $$("button", seg);
+      seg.style.setProperty("--idx", Math.max(0, bs.findIndex((b) => b.getAttribute("aria-pressed") === "true")));
+    });
+    // o topo da página ganha a cor da unidade escolhida
+    $('[data-view="ranking"] .hero').style.setProperty("--glow",
+      F.uni === "__all" ? "var(--accent-wash)" : "color-mix(in srgb, " + UMAP[F.uni].cor + " 20%, transparent)");
   }
   function aplicarFiltros(o) {
     Object.assign(F, o);
