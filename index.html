@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=7">
+<link rel="stylesheet" href="assets/styles.css?v=9">
 <script>try{var t=localStorage.getItem('srg-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
@@ -71,6 +71,21 @@
         <h1 id="h-ranking" class="rise" style="--d:1">O ranking da <em>casa</em>,<br> raia por raia.</h1>
         <p class="hero__sub rise" style="--d:2">Todo tempo lançado no ergômetro entra na disputa. Escolha a categoria, a distância e a unidade — e veja onde você está.</p>
 
+        <!-- celular: tudo a um toque — categoria e distância em botões grandes,
+             idade e unidade em fileiras que deslizam para o lado -->
+        <div class="mf rise" style="--d:2" id="mf">
+          <div class="mf__seg" role="group" aria-label="Categoria">
+            <button type="button" data-mf-s="M" aria-pressed="true">Masculino</button>
+            <button type="button" data-mf-s="F" aria-pressed="false">Feminino</button>
+          </div>
+          <div class="mf__seg" role="group" aria-label="Distância">
+            <button type="button" data-mf-d="500" aria-pressed="true">500 metros</button>
+            <button type="button" data-mf-d="1000" aria-pressed="false">1.000 metros</button>
+          </div>
+          <div class="mf__chips" role="group" aria-label="Faixa etária" id="mf-faixa"></div>
+          <div class="mf__chips" role="group" aria-label="Unidade" id="mf-uni"></div>
+        </div>
+
         <div class="console rise" style="--d:3" role="search" aria-label="Filtros do ranking">
           <div class="console__grid">
             <div class="fld">
@@ -92,7 +107,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 12h20M6 8v8M18 8v8"/></svg>
                 Distância
               </label>
-              <select id="f-dist"><option value="500">500 metros</option><option value="1000">1.000 metros</option><option value="2000">2.000 metros</option></select>
+              <select id="f-dist"><option value="500">500 metros</option><option value="1000">1.000 metros</option></select>
             </div>
             <div class="fld">
               <label class="eyebrow" for="f-uni">
@@ -329,6 +344,6 @@
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
-<script src="assets/app.js?v=7"></script>
+<script src="assets/app.js?v=9"></script>
 </body>
 </html>

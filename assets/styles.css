@@ -1143,6 +1143,89 @@ body{-webkit-tap-highlight-color:transparent}
 
   .foot{margin-top:32px;justify-content:center;text-align:center;padding-bottom:20px}
 }
+/* ============================================================ RANKING NO CELULAR · MODO SIMPLES
+   Só a página de ranking muda. Todo filtro é um toque: categoria e distância
+   em botões grandes; idade e unidade em fileiras que deslizam para o lado.
+   Depois, uma lista única: posição, nome, cidade e tempo. A cor da unidade
+   vira só um pontinho. */
+.mf{display:none;flex-direction:column;gap:10px;margin-top:16px}
+.mf__seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.mf__seg button{
+  flex:1;border:0;background:transparent;color:var(--ink-2);cursor:pointer;
+  padding:12px 6px;border-radius:10px;font-size:1rem;font-weight:500;transition:background .2s,color .2s;
+}
+.mf__seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+/* fileiras de idade e unidade: rolam para o lado, a borda some em degradê para mostrar que tem mais */
+.mf__chips{
+  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 32px),transparent);
+          mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 32px),transparent);
+}
+.mf__chips::-webkit-scrollbar{display:none}
+.mf__chips::after{content:"";flex:0 0 8px}
+.chip-btn{
+  flex:none;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:100px;cursor:pointer;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:.9375rem;white-space:nowrap;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.chip-btn i{width:8px;height:8px;border-radius:50%;background:var(--u);flex:none}
+.chip-btn[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);color:var(--accent);font-weight:600}
+.rlist{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.rlist li + li{border-top:1px solid var(--line-soft)}
+.rrow{
+  display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;
+  padding:14px 16px;color:var(--ink);text-decoration:none;
+  animation:rowIn .45s var(--ease) backwards;animation-delay:calc(var(--i,0) * 30ms);
+}
+.rrow:active{background:var(--surface-2)}
+.rrow__pos{
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface-3);color:var(--ink-2);font-family:Archivo,sans-serif;font-weight:800;font-size:1rem;
+}
+.rrow--lead{background:linear-gradient(90deg,var(--brass-wash),transparent 75%)}
+.rrow--lead .rrow__pos{background:var(--brass);color:#1A1206}
+.rrow--me{background:var(--accent-wash)}
+.rrow__who{min-width:0}
+.rrow__who b{display:block;font-size:1.0625rem;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rrow__who em{font-style:normal;font-size:.75rem;font-weight:600;color:var(--accent);margin-left:2px}
+.rrow__who small{display:flex;align-items:center;gap:7px;margin-top:3px;font-size:.875rem;color:var(--muted);white-space:nowrap;overflow:hidden}
+.rrow__who small i{width:8px;height:8px;border-radius:50%;background:var(--u);flex:none}
+.rrow__t{text-align:right}
+.rrow__t b{display:block;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:1.25rem;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.rrow__t small{display:block;margin-top:2px;font-size:.75rem;font-weight:600;color:var(--brass)}
+.rrow__t small.is-lider{color:var(--ink-2)}
+
+/* tudo aqui mexe só em peças que existem na página de ranking */
+@media(max-width:640px){
+  /* topo: só o título e os filtros simples */
+  .water,.hero::before{display:none}
+  .hero > .wrap > .eyebrow,.hero__sub{display:none}
+  .hero{padding-top:20px}
+  .hero h1{font-size:1.625rem;margin:0}
+  .console{display:none}
+  .mf{display:flex}
+
+  /* contexto vira uma linha: quantos atletas e o período (o recorde já aparece na lista) */
+  .ctx{margin:18px 0 10px;padding-bottom:0;border-bottom:0;gap:10px;flex-wrap:nowrap;justify-content:space-between}
+  .ctx h2,#chip-rec{display:none}
+  #chip-n{order:1;border:0;background:none;padding:0;font-size:.9375rem;color:var(--muted)}
+  #chip-n b{font-size:.9375rem}
+  .ctx .seg{order:2;width:auto}
+  .ctx .seg button{flex:none;padding:7px 11px;font-size:.8125rem}
+
+  /* sem barra de disputa e sem raias: a lista simples assume */
+  .duel{display:none}
+  .lanes{margin-bottom:0}
+  .split{margin-top:12px}
+
+  /* lateral: recordes e evolução, sem as cores de unidade nos avatares */
+  .side{margin-top:6px}
+  [data-view="ranking"] .card{box-shadow:none}
+  .rec{padding:12px}
+  .rec__d{font-size:.8125rem}
+  .evo .avatar{background:var(--surface-3);color:var(--ink-2)}
+}
+
 /* toque não tem "passar o mouse": nada de cartão que fica deslocado depois do toque */
 @media (hover:none){
   .lane:hover,.bdg:hover,.front:hover,.rec:hover,.posrow:hover{transform:none}

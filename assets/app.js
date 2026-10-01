@@ -105,9 +105,9 @@
   ];
 
   const PERIODOS = {
-    geral: { rot: "Classificação geral", rec: "Recorde da casa", dias: 0 },
-    "12m": { rot: "Últimos 12 meses", rec: "Melhor em 12 meses", dias: 365 },
-    "30d": { rot: "Últimos 30 dias", rec: "Melhor em 30 dias", dias: 30 },
+    geral: { rot: "Classificação geral", curto: "Geral", rec: "Recorde da casa", dias: 0 },
+    "12m": { rot: "Últimos 12 meses", curto: "12 meses", rec: "Melhor em 12 meses", dias: 365 },
+    "30d": { rot: "Últimos 30 dias", curto: "30 dias", rec: "Melhor em 30 dias", dias: 30 },
   };
 
   /* ---------- atletas (b = melhor tempo de 500m em segundos) ---------- */
@@ -206,17 +206,18 @@
   const CHAVE = "srg-demo-v1";
   function estadoInicial() {
     const ago = (min) => new Date(AGORA.getTime() - min * 6e4).toISOString();
+    // o tempo do Thiago derruba o recorde de 1.000m (3:26.8) — o momento do confete na demo
     return {
-      v: 1, n: 0, log: [],
+      v: 2, n: 0, log: [],
       added: [
         { id: "p1", a: "marina-kuhnen", dist: 500, t: 113.0, d: ago(24), via: "Tablet · Itajaí", status: "pendente" },
-        { id: "p2", a: "thiago-bertoldi", dist: 2000, t: 424.8, d: ago(57), via: "Tablet · Navegantes", status: "pendente" },
+        { id: "p2", a: "thiago-bertoldi", dist: 1000, t: 204.6, d: ago(57), via: "Tablet · Navegantes", status: "pendente" },
         { id: "p3", a: "larissa-steil", dist: 1000, t: 249.6, d: ago(101), via: "Tablet · Navegantes", status: "pendente" },
       ],
     };
   }
   function carregar() {
-    try { const s = JSON.parse(localStorage.getItem(CHAVE)); return s && s.v === 1 ? s : null; } catch (e) { return null; }
+    try { const s = JSON.parse(localStorage.getItem(CHAVE)); return s && s.v === 2 ? s : null; } catch (e) { return null; }
   }
   let state = carregar() || estadoInicial();
   let _testes = null;
@@ -357,6 +358,21 @@
   /* ============================================================ RANKING */
   const F = { s: "M", faixa: "20-24", dist: 500, uni: "__all", periodo: "geral" };
   const TOP = 5;
+  // no celular o ranking é uma lista única e simples (sem raias, barras e tabela)
+  const CELULAR = matchMedia("(max-width: 640px)");
+
+  function listaSimples(lista, categoria) {
+    const lider = lista[0].t;
+    return '<ol class="rlist">' + lista.map((r, i) => {
+      const gap = r.t - lider, ehRec = i === 0 && r === categoria[0];
+      // dourado só para quem tem o recorde da categoria; líder de um recorte por unidade fica neutro
+      return '<li><a class="rrow' + (ehRec ? " rrow--lead" : "") + (r.a.me ? " rrow--me" : "") + '" href="#/progresso/' + r.a.id + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + Math.min(i, 12) + '">' +
+        '<span class="rrow__pos">' + (i + 1) + "</span>" +
+        '<span class="rrow__who"><b>' + esc(r.a.n) + (r.a.me ? " <em>você</em>" : "") + "</b>" +
+        "<small><i></i>" + esc(r.a.u) + (gap > 0 ? " · +" + gap.toFixed(1) + "s" : "") + "</small></span>" +
+        '<span class="rrow__t"><b>' + fmt(r.t) + "</b>" + (ehRec ? "<small>" + (F.periodo === "geral" ? "Recorde" : "Melhor") + "</small>" : i === 0 ? '<small class="is-lider">Líder</small>' : "") + "</span></a></li>";
+    }).join("") + "</ol>";
+  }
 
   function montarFiltros() {
     $("#f-faixa").innerHTML = FAIXAS.map((f) => '<option value="' + f.id + '">' + f.label + "</option>").join("");
@@ -366,14 +382,54 @@
   function lerFiltros() {
     F.s = $("#f-sexo").value; F.faixa = $("#f-faixa").value; F.dist = +$("#f-dist").value; F.uni = $("#f-uni").value;
   }
+
+  /* filtros do celular: tudo a um toque. Espelham os selects do desktop,
+     que continuam sendo a fonte da verdade. */
+  function montarFiltrosCelular() {
+    $("#mf-faixa").innerHTML = FAIXAS.map((f) =>
+      '<button type="button" class="chip-btn" data-mf-f="' + f.id + '">' + (f.id === "50+" ? "50+ anos" : f.label) + "</button>").join("");
+    $("#mf-uni").innerHTML = '<button type="button" class="chip-btn" data-mf-u="__all">Todas as unidades</button>' +
+      UNIDADES.map((u) => '<button type="button" class="chip-btn" data-mf-u="' + esc(u.nome) + '"><i style="--u:' + u.cor + '"></i>' + esc(u.nome) + "</button>").join("");
+    $("#mf").addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      if (b.dataset.mfS) $("#f-sexo").value = b.dataset.mfS;
+      else if (b.dataset.mfD) $("#f-dist").value = b.dataset.mfD;
+      else if (b.dataset.mfF) $("#f-faixa").value = b.dataset.mfF;
+      else if (b.dataset.mfU) $("#f-uni").value = b.dataset.mfU;
+      else return;
+      renderRanking();
+    });
+  }
+  // o botão escolhido sempre fica à vista na fileira
+  function trazerParaVista(fila, btn) {
+    if (!btn) return;
+    const esq = btn.offsetLeft - 16, dir = btn.offsetLeft + btn.offsetWidth + 16;
+    if (esq < fila.scrollLeft || dir > fila.scrollLeft + fila.clientWidth) {
+      fila.scrollTo({ left: Math.max(0, esq), behavior: REDUZ ? "auto" : "smooth" });
+    }
+  }
+  function sincronizarFiltrosCelular() {
+    $$("[data-mf-s]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mfS === F.s)));
+    $$("[data-mf-d]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.mfD === F.dist)));
+    $$("[data-mf-f]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mfF === F.faixa)));
+    $$("[data-mf-u]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mfU === F.uni)));
+    trazerParaVista($("#mf-faixa"), $('#mf-faixa [aria-pressed="true"]'));
+    trazerParaVista($("#mf-uni"), $('#mf-uni [aria-pressed="true"]'));
+  }
   function aplicarFiltros(o) {
     Object.assign(F, o);
+    // o ranking só tem as distâncias do select (500 e 1.000m); outra distância cai no 500m
+    if (!$$("#f-dist option").some((op) => +op.value === F.dist)) F.dist = 500;
     $("#f-sexo").value = F.s; $("#f-faixa").value = F.faixa; $("#f-dist").value = String(F.dist); $("#f-uni").value = F.uni;
     $$("#periodo button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.p === F.periodo)));
   }
 
+  let rankingNoCelular = null; // em qual modo o ranking foi desenhado por último
   function renderRanking() {
     lerFiltros();
+    sincronizarFiltrosCelular();
+    rankingNoCelular = CELULAR.matches;
     const per = PERIODOS[F.periodo], fx = FMAP[F.faixa];
     const categoria = classificar({ s: F.s, faixa: F.faixa, dist: F.dist, periodo: F.periodo });
     const lista = F.uni === "__all" ? categoria : categoria.filter((r) => r.a.u === F.uni);
@@ -404,6 +460,11 @@
       host.innerHTML = '<div class="empty"><b>Nenhum tempo nesse recorte</b>Ainda não há resultado para essa combinação. Mude o período ou peça ao professor para lançar.</div>';
       renderLateral(); return;
     }
+    if (CELULAR.matches) {
+      lanes.innerHTML = listaSimples(lista, categoria);
+      host.innerHTML = "";
+      renderLateral(); return;
+    }
     const lider = lista[0].t;
     lanes.innerHTML = lista.slice(0, TOP).map((r, i) => {
       const gap = r.t - lider, pct = Math.max(22, 100 - (gap / lider) * 320);
@@ -412,7 +473,7 @@
         (i === 0 ? '<span class="lane__shine" aria-hidden="true"></span>' : "") +
         '<div class="lane__pos">' + (i + 1) + "<small>RAIA</small></div>" +
         '<div class="lane__body"><div class="lane__name">' + linkAtleta(r.a) +
-        (i === 0 ? (ehRec ? ' <span class="tag tag--rec">Recorde</span>' : ' <span class="tag tag--lead">Líder</span>') : "") +
+        (i === 0 ? (ehRec ? ' <span class="tag tag--rec">' + (F.periodo === "geral" ? "Recorde" : "Melhor") + "</span>" : ' <span class="tag tag--lead">Líder</span>') : "") +
         (r.a.me ? ' <span class="tag tag--pr">Você</span>' : "") + "</div>" +
         '<div class="lane__meta">' + selo(r.a.u) +
         '<span class="mi"><i></i>' + r.a.i + " anos</span>" +
@@ -448,7 +509,7 @@
 
   function renderLateral() {
     const fx = FMAP[F.faixa];
-    const recs = [500, 1000, 2000].map((dist) => ({ dist, r: classificar({ s: F.s, faixa: F.faixa, dist })[0] }));
+    const recs = [500, 1000].map((dist) => ({ dist, r: classificar({ s: F.s, faixa: F.faixa, dist })[0] }));
     const evo = evolucao30();
     $("#rk-side").innerHTML =
       '<section class="card spot"><h3>Recordes da casa</h3><p class="card__hint">' + (F.s === "M" ? "Masculino" : "Feminino") + " · " + fx.label + " · toque para ver a distância</p>" +
@@ -1104,13 +1165,19 @@
 
     // escopo: revela passos e regras quando entram na tela
     window.addEventListener("scroll", revelar, { passive: true });
-    window.addEventListener("resize", () => { moverIndicador(true); revelar(); });
+    // virou celular ↔ desktop (girar o aparelho, redimensionar): troca lista ↔ raias
+    function trocouTamanho() {
+      if (rotaAtual === "ranking" && rankingNoCelular !== CELULAR.matches) renderRanking();
+    }
+    window.addEventListener("resize", () => { moverIndicador(true); revelar(); trocouTamanho(); });
+    CELULAR.addEventListener("change", trocouTamanho);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => moverIndicador(true));
     window.addEventListener("hashchange", navegar);
   }
 
   /* ---------- início ---------- */
   montarFiltros();
+  montarFiltrosCelular();
   montarSeletorAtleta();
   ligarRanking();
   ligarProgresso();
