@@ -326,7 +326,7 @@
     if (REDUZ) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const cores = ["#E3A84F", "#F6D28E", "#8CE04E", "#3FD9C9", "#FFFFFF"];
+    const cores = ["#8CE04E", "#B6F27A", "#FFFFFF", "#34D399", "#D9F99D"]; // verde e branco
     // dois canhões nos cantos de baixo, atirando para o centro
     [[0.06, 1], [0.94, -1]].forEach(([fx, lado]) => {
       for (let i = 0; i < 80; i++) {
@@ -367,7 +367,7 @@
     const uni = F.uni === "__all" ? null : UMAP[F.uni];
     return '<ol class="rlist' + (uni ? " rlist--uni" : "") + '"' + (uni ? ' style="--u:' + uni.cor + '"' : "") + ">" + lista.map((r, i) => {
       const gap = r.t - lider, ehRec = i === 0 && r === categoria[0];
-      // dourado só para quem tem o recorde da categoria; líder de um recorte por unidade fica neutro
+      // destaque de recorde (branco) só para quem tem o recorde da categoria; líder de um recorte por unidade fica neutro
       return '<li><a class="rrow' + (ehRec ? " rrow--lead" : "") + (r.a.me ? " rrow--me" : "") + '" href="#/progresso/' + r.a.id + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + Math.min(i, 12) + '">' +
         '<span class="rrow__pos">' + (i + 1) + "</span>" +
         '<span class="rrow__who"><b>' + esc(r.a.n) + (r.a.me ? " <em>você</em>" : "") + "</b>" +
@@ -672,7 +672,7 @@
 
     /* gráfico + alvo + posições */
     html += '<div class="pgrid"><section class="card spot rise" style="--d:1">' +
-      '<div class="card__head"><div><h3>Evolução</h3><p class="card__hint">Mais alto = mais rápido · dourado = recorde pessoal</p></div>' +
+      '<div class="card__head"><div><h3>Evolução</h3><p class="card__hint">Mais alto = mais rápido · ponto branco = recorde pessoal</p></div>' +
       '<div class="seg" id="pg-dist" role="group" aria-label="Distância do gráfico">' +
       [500, 1000, 2000].map((d) => '<button type="button" data-d="' + d + '" aria-pressed="' + (d === pgDist) + '"' + (P.porDist[d].length ? "" : " disabled") + ">" + distLbl(d) + "</button>").join("") +
       '</div></div><div class="chart" id="pg-chart" style="--u:' + u.cor + '"></div>' +
@@ -1173,7 +1173,7 @@
 
     $("#theme").addEventListener("click", () => {
       let cur = document.documentElement.getAttribute("data-theme");
-      if (!cur) cur = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      if (!cur) cur = "dark"; // preto é o padrão, independente do sistema
       const nx = cur === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", nx);
       try { localStorage.setItem("srg-theme", nx); } catch (e) {}
