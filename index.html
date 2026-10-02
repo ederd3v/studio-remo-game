@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=12">
+<link rel="stylesheet" href="assets/styles.css?v=14">
 <script>try{var t=localStorage.getItem('srg-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
@@ -150,21 +150,6 @@
 
       <div class="split">
         <div>
-          <div class="duel" id="duel">
-            <div class="duel__head">
-              <b>Disputa entre unidades</b>
-              <button type="button" class="duel__all" id="duel-all" aria-pressed="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-                Todos
-              </button>
-            </div>
-            <div class="duel__bar" id="duel-bar" role="group" aria-label="Filtrar por unidade"></div>
-            <div class="duel__foot">
-              <span id="duel-sub">Clique numa cidade para ver só ela</span>
-              <span id="duel-lead"></span>
-            </div>
-          </div>
-
           <div class="lanes" id="lanes"></div>
           <div class="tablewrap"><div id="tablehost"></div></div>
         </div>
@@ -221,7 +206,7 @@
           <ul class="checks">
             <li>Pódio em raias com o top 5 e tabela completa do 6º em diante</li>
             <li>Recortes geral, 12 meses e 30 dias — quem chegou agora também disputa</li>
-            <li>Disputa entre Itajaí, Navegantes, Joinville e Balneário Camboriú</li>
+            <li>Ranking por unidade: Itajaí, Navegantes, Joinville e Balneário Camboriú</li>
             <li>Recorde da casa em destaque, com aviso quando cai</li>
           </ul>
           <a class="front__go" href="#/ranking">Abrir o ranking <span aria-hidden="true">→</span></a>
@@ -358,6 +343,6 @@
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
-<script src="assets/app.js?v=12"></script>
+<script src="assets/app.js?v=14"></script>
 </body>
 </html>

@@ -457,18 +457,6 @@
     $("#chip-n").innerHTML = "<b>" + lista.length + "</b> atleta" + (lista.length === 1 ? "" : "s");
     $("#chip-rec").innerHTML = per.rec + " <b>" + (categoria.length ? fmt(categoria[0].t) : "—") + "</b>";
 
-    /* disputa entre unidades: legenda, distribuição e filtro num controle só */
-    const bar = $("#duel-bar");
-    bar.innerHTML = UNIDADES.map((u) => {
-      const q = categoria.filter((r) => r.a.u === u.nome).length;
-      return '<button type="button" class="duel__seg' + (q ? "" : " duel__seg--vazio") + '" style="--u:' + u.cor + ";flex:" + q + ' 1 46px" data-unidade="' + esc(u.nome) +
-        '" aria-pressed="' + (F.uni === u.nome) + '"' + (q ? "" : " disabled") + ' title="' + esc(u.nome) + ": " + q + " de " + categoria.length + ' na categoria"><span>' + u.sigla + " " + q + "</span></button>";
-    }).join("");
-    bar.classList.toggle("duel__bar--filtrado", F.uni !== "__all");
-    $("#duel-all").setAttribute("aria-pressed", String(F.uni === "__all"));
-    $("#duel-sub").textContent = F.uni === "__all" ? "Clique numa cidade para ver só ela" : "Mostrando só " + F.uni + " — toque em Todos para voltar";
-    $("#duel-lead").innerHTML = categoria.length ? "Melhor tempo: <b>" + fmt(categoria[0].t) + "</b> · " + UMAP[categoria[0].a.u].sigla : "";
-
     /* raias — top 5 */
     const lanes = $("#lanes"), host = $("#tablehost");
     lanes.innerHTML = "";
@@ -546,14 +534,6 @@
   function ligarRanking() {
     ["f-sexo", "f-faixa", "f-dist", "f-uni"].forEach((id) => $("#" + id).addEventListener("change", renderRanking));
     $("#go").addEventListener("click", () => { renderRanking(); $(".ctx").scrollIntoView({ behavior: REDUZ ? "auto" : "smooth", block: "start" }); });
-    $("#duel-bar").addEventListener("click", (ev) => {
-      const seg = ev.target.closest(".duel__seg");
-      if (!seg || seg.disabled) return;
-      const cidade = seg.dataset.unidade;
-      $("#f-uni").value = $("#f-uni").value === cidade ? "__all" : cidade; // reclicar desmarca
-      renderRanking();
-    });
-    $("#duel-all").addEventListener("click", () => { $("#f-uni").value = "__all"; renderRanking(); });
     $("#periodo").addEventListener("click", function (ev) {
       const b = ev.target.closest("button[data-p]");
       if (!b) return;

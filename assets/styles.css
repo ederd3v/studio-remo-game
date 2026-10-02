@@ -270,47 +270,6 @@ main:focus{outline:none}
 .seg--lg{border-radius:12px;padding:4px;display:flex}
 .seg--lg button{flex:1;border-radius:9px;padding:10px 12px;font-size:.875rem;font-family:"IBM Plex Mono",monospace}
 
-/* ============================================================ DISPUTA ENTRE UNIDADES */
-.duel{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:15px 18px 17px;margin-bottom:16px;box-shadow:var(--shadow);
-}
-.duel__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-.duel__head b{font-family:Archivo,sans-serif;font-weight:700;font-size:.875rem;text-transform:uppercase;letter-spacing:.03em}
-.duel__all{
-  display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:100px;cursor:pointer;
-  border:1px solid var(--line);background:transparent;color:var(--muted);
-  font-family:"IBM Plex Mono",monospace;font-size:.6875rem;letter-spacing:.1em;text-transform:uppercase;
-  transition:border-color .15s,color .15s,background .15s;
-}
-.duel__all:hover{border-color:var(--accent);color:var(--accent)}
-.duel__all[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-wash);color:var(--accent);font-weight:600}
-.duel__all svg{width:12px;height:12px}
-.duel__bar{display:flex;height:34px;border-radius:8px;overflow:hidden;gap:2px;background:var(--line-soft)}
-.duel__seg{
-  --u:var(--muted);
-  background:var(--u);border:0;padding:0;cursor:pointer;display:grid;place-items:center;min-width:0;
-  font-family:"IBM Plex Mono",monospace;font-size:.6875rem;font-weight:700;letter-spacing:.05em;
-  color:var(--ground-deep);position:relative;overflow:hidden;
-  transition:flex-grow .5s var(--ease), opacity .2s, filter .2s;
-}
-.duel__seg::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);
-  transform:translateX(-120%);transition:transform .7s var(--ease);
-}
-.duel__seg:hover::after{transform:translateX(120%)}
-.duel__seg span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 5px;pointer-events:none;position:relative;z-index:1}
-.duel__seg:hover{filter:brightness(1.12)}
-.duel__seg--vazio{background:var(--line);color:var(--muted);cursor:not-allowed}
-.duel__bar--filtrado .duel__seg{opacity:.28;filter:saturate(.5)}
-.duel__bar--filtrado .duel__seg[aria-pressed="true"]{opacity:1;filter:none}
-.duel__foot{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;flex-wrap:wrap;
-  font-size:.6875rem;color:var(--muted);font-family:"IBM Plex Mono",monospace;
-}
-.duel__foot b{color:var(--ink);font-weight:600}
-
 /* ============================================================ RAIAS — TOP 5 */
 .lanes{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
 .lane{
@@ -1057,11 +1016,6 @@ body{-webkit-tap-highlight-color:transparent}
   .ctx h2{font-size:1.125rem;width:100%;margin:0}
   .ctx .seg{order:3;width:100%}
   .ctx .seg button{flex:1;padding-block:7px}
-  .duel{padding:12px 14px 13px;margin-bottom:12px}
-  .duel__head{margin-bottom:10px}
-  .duel__bar{height:30px}
-  #duel-sub{display:none}
-  .duel__foot{justify-content:flex-end}
   .lanes{gap:6px}
   .split{margin-top:16px;gap:16px}
   .side{gap:14px}
@@ -1287,8 +1241,7 @@ body{-webkit-tap-highlight-color:transparent}
   .ctx .seg{order:2;width:auto}
   .ctx .seg button{flex:none;padding:7px 11px;font-size:.8125rem}
 
-  /* sem barra de disputa e sem raias: a lista simples assume */
-  .duel{display:none}
+  /* sem raias: a lista simples assume */
   .lanes{margin-bottom:0}
   .split{margin-top:12px}
 
