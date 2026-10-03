@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visão mobile · Studio Remo Game</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Ferramenta de pré-visualização: o site dentro de um celular, ao lado dos controles. */
+:root{
+  --bg:#090c0b; --panel:#0f1412; --panel-2:#151c19; --line:#212a26; --ink:#e7ede9; --ink-2:#aab7b0; --muted:#76837d;
+  --accent:#00FC27; --accent-wash:rgba(0,252,39,.12); --ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;color:var(--ink);font:14px/1.5 "IBM Plex Sans",-apple-system,sans-serif;-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(900px 600px at 72% 18%, rgba(63,217,201,.07), transparent 60%),
+    radial-gradient(700px 500px at 30% 100%, rgba(0,252,39,.06), transparent 60%),
+    var(--bg);
+  display:grid;grid-template-columns:290px 1fr;overflow:hidden;
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* ---------- painel ---------- */
+.panel{border-right:1px solid var(--line);background:rgba(15,20,18,.82);backdrop-filter:blur(10px);overflow:auto;padding:20px 18px 24px;display:flex;flex-direction:column;gap:20px}
+.head b{display:block;font-family:"Bebas Neue",sans-serif;font-weight:900;font-stretch:115%;text-transform:uppercase;font-size:1.25rem;letter-spacing:-.01em}
+.head span{font-family:"IBM Plex Mono",monospace;font-size:.6875rem;color:var(--muted);letter-spacing:.06em}
+.grp{display:flex;flex-direction:column;gap:8px}
+.lbl{font-family:"IBM Plex Mono",monospace;font-size:.625rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:4px}
+.opt{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;cursor:pointer;
+  padding:9px 11px;border-radius:10px;border:1px solid transparent;background:transparent;transition:background .15s,border-color .15s;
+}
+.opt:hover{background:var(--panel-2)}
+.opt[aria-pressed="true"]{background:var(--accent-wash);border-color:rgba(0,252,39,.35);color:var(--accent)}
+.opt small{font-family:"IBM Plex Mono",monospace;font-size:.6875rem;color:var(--muted)}
+.opt[aria-pressed="true"] small{color:var(--accent);opacity:.75}
+.opt svg{width:16px;height:16px;flex:none}
+.opt__l{display:flex;align-items:center;gap:10px}
+.opt kbd{font-family:"IBM Plex Mono",monospace;font-size:.625rem;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{flex:1;border:0;background:transparent;border-radius:7px;padding:7px 8px;cursor:pointer;color:var(--ink-2);font-size:.8125rem;transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:var(--accent-wash);color:var(--accent);font-weight:600}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.act{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);cursor:pointer;font-size:.75rem;color:var(--ink-2);text-decoration:none;transition:border-color .15s,color .15s}
+.act:hover{border-color:var(--accent);color:var(--accent)}
+.act svg{width:14px;height:14px}
+.live{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--ink-2);padding:10px 12px;border-radius:10px;border:1px dashed var(--line)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none;animation:ping 1.8s infinite}
+.live.is-flash{border-color:var(--accent);color:var(--accent)}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(0,252,39,.6)}100%{box-shadow:0 0 0 8px transparent}}
+.tip{font-size:.6875rem;color:var(--muted);line-height:1.6;margin-top:auto}
+.tip kbd{font-family:"IBM Plex Mono",monospace;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--ink-2)}
+
+/* ---------- palco ---------- */
+.stage{position:relative;overflow:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:26px;min-width:0}
+.stage.is-real{justify-content:flex-start}
+.urlbar{
+  display:flex;align-items:center;gap:8px;margin-bottom:18px;padding:7px 8px 7px 14px;border-radius:100px;
+  background:rgba(21,28,25,.85);border:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--ink-2);
+  max-width:100%;
+}
+.urlbar svg{width:13px;height:13px;color:var(--muted);flex:none}
+.urlbar b{color:var(--ink);font-weight:500}
+.urlbar a{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;color:var(--muted)}
+.urlbar a:hover{background:var(--panel-2);color:var(--accent)}
+.urlbar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rack{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:var(--gap,34px)}
+.slot{position:relative;flex:none}
+.slot__lbl{position:absolute;left:0;right:0;bottom:-30px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:.6875rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.slot__lbl button{border:0;background:none;cursor:pointer;letter-spacing:inherit;text-transform:inherit;font:inherit;color:inherit}
+.slot__lbl button:hover{color:var(--accent)}
+
+/* ---------- aparelho ---------- */
+.phone{
+  position:absolute;left:0;top:0;transform-origin:0 0;
+  width:calc(var(--w) * 1px + var(--bz) * 2px);height:calc(var(--h) * 1px + var(--bzt) * 1px + var(--bzb) * 1px);
+  padding:calc(var(--bzt) * 1px) calc(var(--bz) * 1px) calc(var(--bzb) * 1px);
+  border-radius:calc(var(--rad) * 1px + var(--bz) * 1px);
+  background:linear-gradient(145deg,#1d2023,#0b0c0d 45%,#16181a);
+  box-shadow:
+    0 0 0 1.5px #4b5055,
+    0 0 0 3px #17191b,
+    0 0 0 4px #5b6167,
+    inset 0 0 0 2px #2a2d30,
+    0 50px 90px -30px rgba(0,0,0,.85),
+    0 24px 40px -24px rgba(0,0,0,.7);
+  transition:transform .45s var(--ease);
+}
+.phone.is-se{border-radius:54px}
+.hw{position:absolute;background:linear-gradient(90deg,#3a3e42,#5d6368,#3a3e42);border-radius:2px}
+.hw--action{left:-6px;top:118px;width:4px;height:34px}
+.hw--vol1{left:-6px;top:178px;width:4px;height:62px}
+.hw--vol2{left:-6px;top:252px;width:4px;height:62px}
+.hw--power{right:-6px;top:200px;width:4px;height:96px}
+.phone.is-land .hw{display:none}
+.screen{position:relative;width:100%;height:100%;overflow:hidden;border-radius:calc(var(--rad) * 1px);background:var(--sb,#000);display:flex;flex-direction:column}
+.phone.is-land .screen{flex-direction:row}
+.status{
+  flex:none;height:calc(var(--st) * 1px);display:flex;align-items:center;justify-content:space-between;
+  padding:6px 30px 0 40px;background:var(--sb,#000);color:var(--sc,#fff);
+  font:600 15px/1 -apple-system,"SF Pro Text","IBM Plex Sans",sans-serif;letter-spacing:-.01em;transition:background .3s,color .3s;
+}
+.phone.is-small-status .status{padding:2px 8px 0;font-size:12px}
+.status svg{height:12px;width:auto;fill:currentColor}
+.status__icons{display:flex;align-items:center;gap:6px}
+.island{position:absolute;z-index:3;background:#000;border-radius:20px;top:11px;left:50%;width:122px;height:35px;transform:translateX(-50%)}
+.island::after{content:"";position:absolute;right:13px;top:50%;width:11px;height:11px;margin-top:-5.5px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#2a3550,#0b0d14 60%)}
+.hole{position:absolute;z-index:3;width:13px;height:13px;border-radius:50%;background:#000;top:14px;left:50%;transform:translateX(-50%);box-shadow:0 0 0 2px rgba(0,0,0,.4)}
+.phone.is-land .island{top:50%;left:11px;width:35px;height:122px;transform:translateY(-50%)}
+.phone.is-land .island::after{right:auto;left:50%;top:auto;bottom:13px;margin:0 0 0 -5.5px}
+.phone.is-land .hole{top:50%;left:14px;transform:translateY(-50%)}
+.phone.is-land .status{display:none}
+iframe{flex:1;width:100%;min-height:0;border:0;display:block;background:var(--sb,#000)}
+.phone.is-land iframe{height:100%;width:auto;min-width:0}
+.base{flex:none;height:calc(var(--bs) * 1px);background:var(--sb,#000);display:grid;place-items:center;transition:background .3s}
+.base i{width:134px;height:5px;border-radius:3px;background:var(--sc,#fff);opacity:.75}
+.phone.is-land .base{display:none}
+.phone.is-land .screen::after{content:"";position:absolute;bottom:7px;left:50%;width:180px;height:5px;margin-left:-90px;border-radius:3px;background:var(--sc,#fff);opacity:.6;pointer-events:none}
+.homebtn{position:absolute;left:50%;bottom:9px;width:46px;height:46px;margin-left:-23px;border-radius:50%;border:2px solid #34383c;background:radial-gradient(circle,#0c0d0e 60%,#17191b)}
+.phone.is-land .homebtn{display:none}
+.earpiece{position:absolute;left:50%;top:28px;width:56px;height:6px;margin-left:-28px;border-radius:3px;background:#222629}
+.phone.is-land .earpiece{display:none}
+.loading{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .2s}
+.slot.is-loading .loading{opacity:1}
+.loading i{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(1turn)}}
+
+@media(max-width:820px){
+  body{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow:auto}
+  .panel{border-right:0;border-bottom:1px solid var(--line);max-height:46vh}
+}
+</style>
+</head>
+<body>
+<aside class="panel" aria-label="Controles da pré-visualização">
+  <div class="head">
+    <b>Visão mobile</b>
+    <span>Studio Remo Game · localhost:5173</span>
+  </div>
+
+  <div class="grp">
+    <span class="lbl">Página</span>
+    <div class="list" id="paginas"></div>
+  </div>
+
+  <div class="grp">
+    <span class="lbl">Exibição</span>
+    <div class="seg" id="modo">
+      <button type="button" data-m="1" aria-pressed="true">1 tela</button>
+      <button type="button" data-m="4" aria-pressed="false">4 telas</button>
+    </div>
+    <div class="seg" id="orient">
+      <button type="button" data-o="retrato" aria-pressed="true">Retrato</button>
+      <button type="button" data-o="paisagem" aria-pressed="false">Paisagem</button>
+    </div>
+    <div class="seg" id="zoom">
+      <button type="button" data-z="fit" aria-pressed="true">Ajustar</button>
+      <button type="button" data-z="real" aria-pressed="false">100%</button>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="lbl">Aparelho</span>
+    <div class="list" id="aparelhos"></div>
+  </div>
+
+  <div class="grp">
+    <span class="lbl">Tema do site</span>
+    <div class="seg" id="tema">
+      <button type="button" data-t="dark" aria-pressed="true">Escuro</button>
+      <button type="button" data-t="light" aria-pressed="false">Claro</button>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="lbl">Ações</span>
+    <div class="actions">
+      <button type="button" class="act" id="recarregar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Recarregar</button>
+      <button type="button" class="act" id="restaurar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Restaurar demo</button>
+    </div>
+    <div class="live" id="live"><i></i><span>Recarrega sozinho quando o código muda</span></div>
+  </div>
+
+  <p class="tip">Atalhos: <kbd>1</kbd>–<kbd>4</kbd> páginas · <kbd>G</kbd> 1/4 telas · <kbd>P</kbd> paisagem · <kbd>R</kbd> recarregar</p>
+</aside>
+
+<main class="stage" id="stage">
+  <div class="urlbar" id="urlbar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg>
+    <span id="url">localhost:5173</span>
+    <a id="abrir" href="../index.html" target="_blank" rel="noopener" title="Abrir em nova aba" aria-label="Abrir em nova aba">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+    </a>
+  </div>
+  <div class="rack" id="rack"></div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+  const APARELHOS = {
+    iphone16pro: { nome: "iPhone 16 Pro", w: 402, h: 874, rad: 56, bz: 11, bzt: 11, bzb: 11, cam: "island", st: 54, bs: 26 },
+    iphone16:    { nome: "iPhone 16",     w: 393, h: 852, rad: 54, bz: 11, bzt: 11, bzb: 11, cam: "island", st: 54, bs: 26 },
+    iphonese:    { nome: "iPhone SE",     w: 375, h: 667, rad: 4,  bz: 14, bzt: 70, bzb: 70, cam: "se",     st: 20, bs: 0 },
+    pixel9:      { nome: "Pixel 9",       w: 412, h: 915, rad: 44, bz: 10, bzt: 10, bzb: 10, cam: "hole",   st: 40, bs: 18 },
+    galaxys24:   { nome: "Galaxy S24",    w: 360, h: 780, rad: 40, bz: 9,  bzt: 9,  bzb: 9,  cam: "hole",   st: 36, bs: 18 },
+  };
+  const PAGINAS = [
+    { id: "ranking", nome: "Ranking", ic: '<path d="M3 21V13h6v8M9 21V8h6v13M15 21v-6h6v6"/>' },
+    { id: "progresso", nome: "Meu progresso", ic: '<path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/>' },
+    { id: "professor", nome: "Área do professor", ic: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/>' },
+    { id: "escopo", nome: "Escopo", ic: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>' },
+  ];
+  const ICONES_STATUS =
+    '<svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".7"/><rect x="5" y="5.5" width="3" height="6.5" rx=".7"/><rect x="10" y="3" width="3" height="9" rx=".7"/><rect x="15" y="0" width="3" height="12" rx=".7"/></svg>' +
+    '<svg viewBox="0 0 16 12"><path d="M8 2.6c2.3 0 4.4.9 6 2.4l1.2-1.3A10.4 10.4 0 0 0 8 .8 10.4 10.4 0 0 0 .8 3.7L2 5c1.6-1.5 3.7-2.4 6-2.4Zm0 3.6c1.3 0 2.5.5 3.4 1.3l1.2-1.3A6.6 6.6 0 0 0 8 4.4c-1.8 0-3.4.7-4.6 1.8l1.2 1.3c.9-.8 2.1-1.3 3.4-1.3Zm0 3.5c.5 0 1 .2 1.3.5L8 11.6 6.7 10.2c.3-.3.8-.5 1.3-.5Z"/></svg>' +
+    '<svg viewBox="0 0 27 12"><rect x=".5" y=".5" width="22" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".45"/><rect x="2.2" y="2.2" width="17" height="7.6" rx="1.8"/><path d="M24.2 4v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" opacity=".5"/></svg>';
+
+  // preferências da ferramenta (lembradas entre recargas)
+  const PREF = "srg-mobile-pref";
+  let pref = { pagina: "ranking", modo: "1", orient: "retrato", zoom: "fit", aparelho: "iphone16pro" };
+  try { Object.assign(pref, JSON.parse(localStorage.getItem(PREF)) || {}); } catch (e) {}
+  const salvar = () => { try { localStorage.setItem(PREF, JSON.stringify(pref)); } catch (e) {} };
+  let tema = "dark";
+  try { tema = localStorage.getItem("srg-theme") || "dark"; } catch (e) {}
+
+  /* ---------- painel ---------- */
+  function montarPainel() {
+    $("#paginas").innerHTML = PAGINAS.map((p, i) =>
+      '<button type="button" class="opt" data-p="' + p.id + '"><span class="opt__l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p.ic + "</svg>" + p.nome + "</span><kbd>" + (i + 1) + "</kbd></button>").join("");
+    $("#aparelhos").innerHTML = Object.keys(APARELHOS).map((k) =>
+      '<button type="button" class="opt" data-a="' + k + '"><span>' + APARELHOS[k].nome + "</span><small>" + APARELHOS[k].w + "×" + APARELHOS[k].h + "</small></button>").join("");
+    marcar();
+  }
+  function marcar() {
+    $$("#paginas .opt").forEach((b) => b.setAttribute("aria-pressed", String(pref.modo === "1" && b.dataset.p === pref.pagina)));
+    $$("#aparelhos .opt").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.a === pref.aparelho)));
+    $$("#modo button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === pref.modo)));
+    $$("#orient button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.o === pref.orient)));
+    $$("#zoom button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.z === pref.zoom)));
+    $$("#tema button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.t === tema)));
+  }
+
+  /* ---------- aparelhos ---------- */
+  function dims() {
+    const a = APARELHOS[pref.aparelho], land = pref.orient === "paisagem";
+    return land
+      ? { a, land, w: a.h, h: a.w, bz: a.bzt, bzt: a.bz, bzb: a.bz }
+      : { a, land, w: a.w, h: a.h, bz: a.bz, bzt: a.bzt, bzb: a.bzb };
+  }
+  function celular(pagina, rotulo) {
+    const d = dims(), a = d.a;
+    const st = d.land ? 0 : a.st, bs = d.land ? 0 : a.bs;
+    const cls = "phone" + (d.land ? " is-land" : "") + (a.cam === "se" ? " is-se is-small-status" : "");
+    const cam = a.cam === "island" ? '<span class="island"></span>' : a.cam === "hole" ? '<span class="hole"></span>' : "";
+    const se = a.cam === "se" ? '<span class="earpiece"></span><span class="homebtn"></span>' : "";
+    return '<div class="slot is-loading" data-pagina="' + pagina + '">' +
+      '<div class="' + cls + '" style="--w:' + d.w + ";--h:" + d.h + ";--rad:" + a.rad + ";--bz:" + d.bz + ";--bzt:" + d.bzt + ";--bzb:" + d.bzb + ";--st:" + st + ";--bs:" + bs + '">' +
+      (a.cam === "se" ? "" : '<span class="hw hw--action"></span><span class="hw hw--vol1"></span><span class="hw hw--vol2"></span><span class="hw hw--power"></span>') + se +
+      '<div class="screen">' + (st ? '<div class="status"><span>9:41</span><span class="status__icons">' + ICONES_STATUS + "</span></div>" : "") + cam +
+      '<iframe src="../index.html#/' + pagina + '" title="' + rotulo + ' no celular"></iframe>' +
+      (bs ? '<div class="base"><i></i></div>' : "") + "</div></div>" +
+      '<div class="loading"><i></i></div>' +
+      (pref.modo === "4" ? '<p class="slot__lbl"><button type="button" data-foco="' + pagina + '">' + rotulo + "</button></p>" : "") +
+      "</div>";
+  }
+
+  function montar() {
+    const paginas = pref.modo === "4" ? PAGINAS : PAGINAS.filter((p) => p.id === pref.pagina);
+    $("#rack").innerHTML = paginas.map((p) => celular(p.id, p.nome)).join("");
+    $("#urlbar").style.display = pref.modo === "1" ? "" : "none";
+    $$("#rack iframe").forEach(ligarIframe);
+    ajustar();
+    atualizarUrl();
+  }
+
+  // encaixa os celulares no espaço disponível
+  function ajustar() {
+    const d = dims(), slots = $$("#rack .slot");
+    if (!slots.length) return;
+    const natW = d.w + d.bz * 2, natH = d.h + d.bzt + d.bzb;
+    const stage = $("#stage"), cs = getComputedStyle(stage);
+    const availW = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const availH = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - (pref.modo === "1" ? 58 : 40);
+    const n = slots.length, gap = 34;
+    let s = 1;
+    if (pref.zoom === "fit") {
+      if (n === 1) s = Math.min(1, availW / natW, availH / natH);
+      else {
+        const linha = Math.min((availW - gap * (n - 1)) / (natW * n), availH / natH);
+        const grade = Math.min((availW - gap) / (natW * 2), (availH - 40) / (natH * 2));
+        s = Math.min(1, Math.max(linha, grade));
+      }
+    }
+    s = Math.max(0.2, s);
+    $("#stage").classList.toggle("is-real", pref.zoom === "real");
+    $("#rack").style.setProperty("--gap", (pref.modo === "4" ? 34 : 0) + "px");
+    $("#rack").style.rowGap = pref.modo === "4" ? "54px" : "0";
+    slots.forEach((slot) => {
+      slot.style.width = natW * s + "px";
+      slot.style.height = natH * s + "px";
+      slot.querySelector(".phone").style.transform = "scale(" + s + ")";
+    });
+  }
+
+  /* ---------- iframes ---------- */
+  function corDoSite(f) {
+    try {
+      const doc = f.contentDocument, cs = doc && getComputedStyle(doc.documentElement);
+      const fundo = cs && cs.getPropertyValue("--ground-deep").trim();
+      const claro = doc.documentElement.getAttribute("data-theme") === "light";
+      const ph = f.closest(".phone");
+      if (fundo) ph.style.setProperty("--sb", fundo);
+      ph.style.setProperty("--sc", claro ? "#0D1815" : "#ffffff");
+    } catch (e) {}
+  }
+  function ligarIframe(f) {
+    f.addEventListener("load", () => {
+      const slot = f.closest(".slot");
+      slot.classList.remove("is-loading");
+      try {
+        // celular não tem barra de rolagem fixa: sem ela, a largura útil fica igual à do aparelho
+        const css = f.contentDocument.createElement("style");
+        css.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar{display:none}";
+        f.contentDocument.head.appendChild(css);
+        f.contentDocument.documentElement.setAttribute("data-theme", tema);
+        const sy = +(f.dataset.sy || 0);
+        if (sy) setTimeout(() => f.contentWindow.scrollTo({ top: sy, behavior: "instant" }), 120);
+        f.contentWindow.addEventListener("hashchange", () => { atualizarUrl(); seguirPagina(f); });
+      } catch (e) {}
+      corDoSite(f);
+      atualizarUrl();
+    });
+  }
+  // no modo 1 tela, se o usuário navegar dentro do celular, o painel acompanha
+  function seguirPagina(f) {
+    if (pref.modo !== "1") return;
+    try {
+      const r = f.contentWindow.location.hash.replace(/^#\/?/, "").split("/")[0] || "ranking";
+      if (PAGINAS.some((p) => p.id === r) && r !== pref.pagina) { pref.pagina = r; salvar(); marcar(); }
+    } catch (e) {}
+  }
+  function atualizarUrl() {
+    const f = $("#rack iframe");
+    let h = "#/" + pref.pagina;
+    try { if (f && f.contentWindow) h = f.contentWindow.location.hash || h; } catch (e) {}
+    $("#url").innerHTML = "<b>localhost:5173</b>/" + h;
+    $("#abrir").href = "../index.html" + h;
+  }
+  function recarregar(manterRolagem) {
+    $$("#rack iframe").forEach((f) => {
+      try {
+        f.dataset.sy = manterRolagem ? f.contentWindow.scrollY : 0;
+        f.closest(".slot").classList.add("is-loading");
+        f.contentWindow.location.reload();
+      } catch (e) { f.src = f.src; }
+    });
+  }
+  function irPara(pagina) {
+    pref.pagina = pagina; salvar(); marcar();
+    if (pref.modo === "4") { pref.modo = "1"; salvar(); marcar(); return montar(); }
+    const f = $("#rack iframe");
+    try { f.contentWindow.location.hash = "#/" + pagina; } catch (e) { montar(); }
+    atualizarUrl();
+  }
+
+  /* ---------- controles ---------- */
+  $("#paginas").addEventListener("click", (e) => { const b = e.target.closest("[data-p]"); if (b) irPara(b.dataset.p); });
+  $("#aparelhos").addEventListener("click", (e) => { const b = e.target.closest("[data-a]"); if (!b) return; pref.aparelho = b.dataset.a; salvar(); marcar(); montar(); });
+  $("#modo").addEventListener("click", (e) => { const b = e.target.closest("[data-m]"); if (!b) return; pref.modo = b.dataset.m; salvar(); marcar(); montar(); });
+  $("#orient").addEventListener("click", (e) => { const b = e.target.closest("[data-o]"); if (!b) return; pref.orient = b.dataset.o; salvar(); marcar(); montar(); });
+  $("#zoom").addEventListener("click", (e) => { const b = e.target.closest("[data-z]"); if (!b) return; pref.zoom = b.dataset.z; salvar(); marcar(); ajustar(); });
+  $("#tema").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-t]"); if (!b) return;
+    tema = b.dataset.t;
+    try { localStorage.setItem("srg-theme", tema); } catch (err) {}
+    $$("#rack iframe").forEach((f) => { try { f.contentDocument.documentElement.setAttribute("data-theme", tema); } catch (err) {} corDoSite(f); });
+    marcar();
+  });
+  $("#rack").addEventListener("click", (e) => { const b = e.target.closest("[data-foco]"); if (b) irPara(b.dataset.foco); });
+  $("#recarregar").addEventListener("click", () => recarregar(true));
+  $("#restaurar").addEventListener("click", () => {
+    try { localStorage.removeItem("srg-demo-v1"); sessionStorage.removeItem("srg-prof"); } catch (e) {}
+    recarregar(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (/^[1-4]$/.test(k)) irPara(PAGINAS[+k - 1].id);
+    else if (k === "g") { pref.modo = pref.modo === "1" ? "4" : "1"; salvar(); marcar(); montar(); }
+    else if (k === "p") { pref.orient = pref.orient === "retrato" ? "paisagem" : "retrato"; salvar(); marcar(); montar(); }
+    else if (k === "r") recarregar(true);
+  });
+  window.addEventListener("resize", ajustar);
+  // o tema trocado dentro do site reflete na barra de status
+  window.addEventListener("storage", (e) => { if (e.key === "srg-theme" && e.newValue) { tema = e.newValue; marcar(); $$("#rack iframe").forEach(corDoSite); } });
+  setInterval(() => {
+    $$("#rack iframe").forEach((f) => {
+      try {
+        const t = f.contentDocument.documentElement.getAttribute("data-theme");
+        if (t && t !== tema) { tema = t; marcar(); }
+        corDoSite(f);
+      } catch (e) {}
+    });
+  }, 700);
+
+  /* ---------- recarga automática ---------- */
+  const ARQUIVOS = ["../index.html", "../assets/styles.css", "../assets/app.js"];
+  const marcas = {};
+  async function vigiar() {
+    let mudou = false;
+    for (const arq of ARQUIVOS) {
+      try {
+        const r = await fetch(arq, { method: "HEAD", cache: "no-store" });
+        const m = (r.headers.get("Last-Modified") || "") + "|" + (r.headers.get("Content-Length") || "");
+        if (marcas[arq] && marcas[arq] !== m) mudou = true;
+        marcas[arq] = m;
+      } catch (e) {}
+    }
+    if (mudou) {
+      recarregar(true);
+      const live = $("#live");
+      live.classList.add("is-flash"); live.querySelector("span").textContent = "Código mudou · recarregado";
+      setTimeout(() => { live.classList.remove("is-flash"); live.querySelector("span").textContent = "Recarrega sozinho quando o código muda"; }, 1800);
+    }
+    setTimeout(vigiar, 1000);
+  }
+
+  montarPainel();
+  montar();
+  vigiar();
+})();
+</script>
+</body>
+</html>

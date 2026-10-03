@@ -1101,7 +1101,7 @@ body{-webkit-tap-highlight-color:transparent}
 /* desktop: um painel só, com título em cada grupo e tudo à vista */
 .chip-anos{display:none}
 .mf{
-  display:grid;grid-template-columns:minmax(200px,230px) minmax(230px,260px) minmax(0,1fr);gap:18px 28px;
+  display:grid;grid-template-columns:minmax(290px,320px) minmax(230px,260px) minmax(0,1fr);gap:18px 28px;
   margin-top:30px;padding:18px 20px 20px;border-radius:var(--r-lg);position:relative;
   background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lg);
 }
@@ -1335,6 +1335,65 @@ h1,h2,h3{letter-spacing:.01em}
   .dash__who b{font-size:1.25rem}
   .card h3{font-size:1.25rem}
 }
+
+/* ============================================================ MODO TV (telão da academia)
+   Tela cheia, sem menus: GAME + categoria e o 1º ao 5º colocado. Tudo medido em
+   relação à altura da tela (vh) para servir em qualquer TV, de 32 a 75 polegadas. */
+.tvbtn{
+  display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:10px;flex:none;
+  border:1.5px solid var(--accent);color:var(--accent);text-decoration:none;
+  background:color-mix(in srgb, var(--accent) 10%, transparent);box-shadow:0 0 16px -8px var(--accent);
+  font-family:var(--display);font-size:1.125rem;letter-spacing:.08em;transition:background .2s,color .2s,box-shadow .2s;
+}
+.tvbtn svg{width:17px;height:17px}
+.tvbtn:hover{background:var(--accent);color:var(--on-accent);box-shadow:0 0 24px -6px var(--accent)}
+@media(max-width:640px){.tvbtn{display:none}} /* TV é para o telão; no celular não precisa */
+
+body.modo-tv{padding-bottom:0;overflow:hidden}
+body.modo-tv .topbar,body.modo-tv .tabbar,body.modo-tv .foot,body.modo-tv .skip{display:none}
+.view--tv.is-active{display:flex}
+.view--tv{
+  flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;
+  /* embaixo sobra espaço para a assinatura, que fica metade para fora da linha */
+  height:calc(100vh - 7.2vh);margin:1.7vh 1.3vw 5.5vh;padding:3vh 3vw 4.6vh;
+  border-width:3px;border-radius:2vh;
+}
+/* o palco tem a largura do ranking no computador; o JS amplia (zoom) até caber na TV */
+.tv__palco{width:1140px;flex:none}
+.tv__head{display:flex;align-items:center;gap:30px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.tv__titulo{margin:0;line-height:0;flex:none}
+/* GAME no estilo da marca: letra grossa e condensada, verde com textura rachada */
+.tv__game{display:block;height:120px;width:auto;overflow:visible;
+  filter:drop-shadow(0 0 22px rgba(0,252,39,.35)) drop-shadow(0 3px 0 #021A07)}
+.tv__game text{font-family:"Anton","Bebas Neue",Impact,sans-serif;font-size:172px;letter-spacing:5px}
+.tv__ctx{min-width:0}
+.tv__ctx small{display:block;margin-bottom:8px;font-family:"IBM Plex Mono",monospace;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.tv__ctx h2{font-family:var(--display);font-size:2.75rem;line-height:1;letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
+/* barrinha que enche até a próxima categoria (só com a troca automática ligada) */
+.tv__tempo{height:3px;margin:-18px 0 15px;border-radius:2px;background:var(--line-soft);overflow:hidden;visibility:hidden}
+.tv__tempo.is-on{visibility:visible}
+.tv__tempo i{display:block;height:100%;width:100%;background:var(--accent);box-shadow:0 0 10px var(--accent);
+  transform-origin:left;animation:tvTempo linear forwards}
+@keyframes tvTempo{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.tv__lanes{margin-bottom:0}
+.tv__lanes .lane{cursor:default}
+.tv__lanes .lane:hover{transform:none}
+.tv__lanes .empty{border:1.5px dashed var(--line);border-radius:var(--r-lg);padding:80px 20px}
+
+/* botões da TV: discretos no canto e somem com o mouse parado */
+.tv__bar{position:absolute;top:2vh;right:2vw;display:flex;gap:10px;z-index:3;transition:opacity .4s}
+.tv__btn{
+  border:1.5px solid var(--line);background:color-mix(in srgb, var(--ground) 80%, transparent);color:var(--ink-2);
+  padding:9px 14px;border-radius:10px;cursor:pointer;font-family:var(--display);font-size:1.0625rem;letter-spacing:.06em;
+  backdrop-filter:blur(6px);transition:border-color .2s,color .2s,background .2s;
+}
+.tv__btn:hover,.tv__btn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.tv__btn--sair:hover{background:var(--accent);color:var(--on-accent)}
+body.tv-ocioso .tv__bar{opacity:0;pointer-events:none}
+body.tv-ocioso{cursor:none}
+.view--tv .assinatura{right:3vw}
+.view--tv .assinatura svg{width:8vh;height:5vh}
+.view--tv .assinatura span{font-size:2.6vh}
 
 /* toque não tem "passar o mouse": nada de cartão que fica deslocado depois do toque */
 @media (hover:none){

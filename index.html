@@ -9,8 +9,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚣</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kaushan+Script&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=15">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Kaushan+Script&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css?v=16">
 <script>try{var t=localStorage.getItem('srg-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
@@ -43,6 +43,10 @@
       <a href="#/professor" data-route="professor">Área do professor</a>
       <a href="#/escopo" data-route="escopo">Escopo</a>
     </nav>
+    <a class="tvbtn" href="#/tv" id="tv-btn" aria-label="Abrir o modo TV (telão)" title="Modo TV para os telões da academia">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      <span>TV</span>
+    </a>
     <button class="themebtn" id="theme" type="button" aria-label="Alternar tema claro e escuro">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
@@ -77,9 +81,10 @@
         <div class="mf rise" style="--d:3" id="mf" role="search" aria-label="Filtros do ranking">
           <div class="mf__grp mf__grp--cat">
             <span class="mf__lbl">Categoria</span>
-            <div class="mf__seg" role="group" aria-label="Categoria" style="--n:2">
+            <div class="mf__seg" role="group" aria-label="Categoria" style="--n:3">
               <button type="button" data-mf-s="M" aria-pressed="true">Masculino</button>
               <button type="button" data-mf-s="F" aria-pressed="false">Feminino</button>
+              <button type="button" data-mf-s="T" aria-pressed="false">Todos</button>
             </div>
           </div>
           <div class="mf__grp mf__grp--dist">
@@ -107,7 +112,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
                 Categoria
               </label>
-              <select id="f-sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select>
+              <select id="f-sexo"><option value="M">Masculino</option><option value="F">Feminino</option><option value="T">Todos</option></select>
             </div>
             <div class="fld">
               <label class="eyebrow" for="f-faixa">
@@ -316,6 +321,52 @@
     </div>
   </section>
 
+  <!-- ============================================================ MODO TV (telão da academia)
+       O ranking oficial do 1º ao 5º, igualzinho, com "GAME" no lugar do título.
+       O palco é desenhado no tamanho do desktop e ampliado para caber na TV. -->
+  <section class="view view--tv" data-view="tv" aria-labelledby="tv-titulo">
+    <div class="tv__palco" id="tv-palco">
+      <header class="tv__head">
+        <h1 class="tv__titulo" id="tv-titulo">
+          <svg class="tv__game" viewBox="0 0 440 170" role="img" aria-label="Game">
+            <defs>
+              <!-- o formato das letras recorta as placas -->
+              <clipPath id="game-letras"><text x="220" y="150" text-anchor="middle">GAME</text></clipPath>
+              <!-- bordas gastas, com lascas, como na arte da marca -->
+              <filter id="game-borda" x="-3%" y="-3%" width="106%" height="106%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="9" result="r"/>
+                <feDisplacementMap in="SourceGraphic" in2="r" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+              </filter>
+              <!-- granulado leve dentro das placas -->
+              <filter id="game-grao" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="2" seed="3"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 .9  0 0 0 0 1  0 0 0 0 .7  1.6 0 0 0 -.95"/>
+              </filter>
+            </defs>
+            <g filter="url(#game-borda)">
+              <g clip-path="url(#game-letras)">
+                <rect width="440" height="170" fill="#0B240B"/>
+                <g id="game-placas"></g>
+                <rect width="440" height="170" filter="url(#game-grao)" opacity=".18"/>
+                <g id="game-rachas" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
+              </g>
+            </g>
+          </svg>
+        </h1>
+        <div class="tv__ctx">
+          <small id="tv-per">Classificação geral</small>
+          <h2 id="tv-cat">Masculino · 20–24 anos · 500m</h2>
+        </div>
+      </header>
+      <div class="tv__tempo" id="tv-tempo" aria-hidden="true"><i></i></div>
+      <div class="lanes tv__lanes" id="tv-lanes"></div>
+    </div>
+    <div class="tv__bar" id="tv-bar">
+      <button type="button" class="tv__btn" id="tv-rodizio" aria-pressed="false">Trocar categoria sozinho</button>
+      <button type="button" class="tv__btn tv__btn--sair" id="tv-sair">Sair da TV</button>
+    </div>
+  </section>
+
   <footer class="wrap foot">
     <span>Mockup de interface · dados fictícios para validação visual</span>
     <span class="mono">Studio Remo Game · Itajaí / SC</span>
@@ -343,6 +394,6 @@
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
-<script src="assets/app.js?v=15"></script>
+<script src="assets/app.js?v=16"></script>
 </body>
 </html>

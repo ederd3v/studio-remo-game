@@ -98,6 +98,18 @@
   ];
   const FMAP = {}; FAIXAS.forEach((f) => (FMAP[f.id] = f));
   const faixaDe = (a) => FAIXAS.find((f) => a.i >= f.min && a.i <= f.max);
+  // "sem filtro": todas as idades e os dois sexos juntos (fora de FAIXAS, que são as faixas reais)
+  const FAIXA_TODAS = { id: "todas", label: "Todas as idades", min: 0, max: 200 };
+  FMAP.todas = FAIXA_TODAS;
+  const SEXOS = { M: "Masculino", F: "Feminino", T: "Todos" };
+  const SEXO_CURTO = { M: "Masc.", F: "Fem." };
+  // como a categoria aparece nos títulos (ranking, recordes e telão)
+  function rotuloCategoria(s, faixa, dist, uni) {
+    const partes = s === "T" && faixa === "todas" ? ["Geral · todos os atletas"] : [SEXOS[s], FMAP[faixa].label];
+    if (dist) partes.push(distLbl(dist));
+    if (uni && uni !== "__all") partes.push(uni);
+    return partes;
+  }
 
   const NIVEIS = [
     { min: 0, n: "Estreante" }, { min: 400, n: "Remador" }, { min: 900, n: "Voga" },
@@ -238,7 +250,7 @@
     testes().forEach((t) => {
       if (t.dist !== o.dist || t.id === o.excluir) return;
       const a = AMAP[t.a];
-      if (a.s !== o.s || a.i < fx.min || a.i > fx.max) return;
+      if ((o.s !== "T" && a.s !== o.s) || a.i < fx.min || a.i > fx.max) return;
       if (lim && t.d < lim) return;
       const c = best[t.a];
       if (!c || t.t < c.t || (t.t === c.t && t.d < c.d)) best[t.a] = t;
@@ -371,15 +383,16 @@
       return '<li><a class="rrow' + (ehRec ? " rrow--lead" : "") + (r.a.me ? " rrow--me" : "") + '" href="#/progresso/' + r.a.id + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + Math.min(i, 12) + '">' +
         '<span class="rrow__pos">' + (i + 1) + "</span>" +
         '<span class="rrow__who"><b>' + esc(r.a.n) + (r.a.me ? " <em>você</em>" : "") + "</b>" +
-        "<small><i></i>" + esc(r.a.u) + (gap > 0 ? " · +" + gap.toFixed(1) + "s" : "") + "</small></span>" +
+        "<small><i></i>" + esc(r.a.u) + (F.s === "T" ? " · " + SEXO_CURTO[r.a.s] : "") + (gap > 0 ? " · +" + gap.toFixed(1) + "s" : "") + "</small></span>" +
         '<span class="rrow__t"><b>' + fmt(r.t) + "</b>" + (ehRec ? "<small>" + (F.periodo === "geral" ? "Recorde" : "Melhor") + "</small>" : i === 0 ? '<small class="is-lider">Líder</small>' : "") + "</span></a></li>";
     }).join("") + "</ol>";
   }
 
   function montarFiltros() {
-    $("#f-faixa").innerHTML = FAIXAS.map((f) => '<option value="' + f.id + '">' + f.label + "</option>").join("");
+    $("#f-faixa").innerHTML = '<option value="todas">Todas as idades</option>' + FAIXAS.map((f) => '<option value="' + f.id + '">' + f.label + "</option>").join("");
     $("#f-uni").innerHTML = '<option value="__all">Todas as unidades</option>' +
       UNIDADES.map((u) => '<option value="' + esc(u.nome) + '">' + esc(u.nome) + " (" + u.sigla + ")</option>").join("");
+    $("#f-sexo").value = F.s; $("#f-faixa").value = F.faixa; $("#f-uni").value = F.uni;
   }
   function lerFiltros() {
     F.s = $("#f-sexo").value; F.faixa = $("#f-faixa").value; F.dist = +$("#f-dist").value; F.uni = $("#f-uni").value;
@@ -389,7 +402,7 @@
      que continuam sendo a fonte da verdade. */
   function montarFiltrosCelular() {
     // "anos" só aparece no celular — no desktop o título "Faixa etária" já diz
-    $("#mf-faixa").innerHTML = FAIXAS.map((f) =>
+    $("#mf-faixa").innerHTML = '<button type="button" class="chip-btn" data-mf-f="todas"><span>Todas<span class="chip-anos"> as idades</span></span></button>' + FAIXAS.map((f) =>
       '<button type="button" class="chip-btn" data-mf-f="' + f.id + '"><span>' + (f.id === "50+" ? "50+" : f.label.replace(" anos", "")) + '<span class="chip-anos"> anos</span></span></button>').join("");
     $("#mf-uni").innerHTML = '<button type="button" class="chip-btn" data-mf-u="__all">Todas as unidades</button>' +
       UNIDADES.map((u) => '<button type="button" class="chip-btn" data-mf-u="' + esc(u.nome) + '" style="--u:' + u.cor + '"><i></i>' + esc(u.nome) + "</button>").join("");
@@ -441,6 +454,25 @@
     $$("#periodo button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.p === F.periodo)));
   }
 
+  // uma raia do pódio — a mesma no ranking e no telão (no telão o nome não é link e não tem "Você")
+  function raiaHTML(r, i, lider, ehRec, noTelao, comSexo) {
+    const gap = r.t - lider, pct = Math.max(22, 100 - (gap / lider) * 320);
+    return '<article class="lane lane--' + (i + 1) + ' spot" style="--u:' + UMAP[r.a.u].cor + ";--i:" + i + '" data-atleta="' + r.a.id + '">' +
+      (i === 0 ? '<span class="lane__shine" aria-hidden="true"></span>' : "") +
+      '<div class="lane__pos">' + (i + 1) + "<small>RAIA</small></div>" +
+      '<div class="lane__body"><div class="lane__name">' + (noTelao ? esc(r.a.n) : linkAtleta(r.a)) +
+      (i === 0 ? (ehRec ? ' <span class="tag tag--rec">' + (F.periodo === "geral" ? "Recorde" : "Melhor") + "</span>" : ' <span class="tag tag--lead">Líder</span>') : "") +
+      (r.a.me && !noTelao ? ' <span class="tag tag--pr">Você</span>' : "") + "</div>" +
+      '<div class="lane__meta">' + selo(r.a.u) +
+      (comSexo ? '<span class="mi"><i></i>' + SEXOS[r.a.s] + "</span>" : "") +
+      '<span class="mi"><i></i>' + r.a.i + " anos</span>" +
+      '<span class="mi"><i></i>' + r.w + " W médios</span>" +
+      '<span class="mi"><i></i>' + dataCurta(r.d) + "</span>" +
+      (gap > 0 ? '<span class="mi mi--gap"><i></i>+' + gap.toFixed(1) + "s do líder</span>" : "") + "</div>" +
+      '<div class="gap"><span class="gap__fill" style="--w:' + pct.toFixed(1) + '%"><span class="boat">' + BARCO + "</span></span></div></div>" +
+      '<div class="lane__time"><b>' + fmt(r.t) + "</b><em>" + r.sp + " /500m</em></div></article>";
+  }
+
   let rankingNoCelular = null; // em qual modo o ranking foi desenhado por último
   function renderRanking() {
     lerFiltros();
@@ -452,7 +484,7 @@
 
     $("#ctx-eyebrow").textContent = per.rot;
     // cada pedaço fica inteiro na quebra de linha ("20–24 anos" não parte no traço)
-    $("#ctx-title").innerHTML = [F.s === "M" ? "Masculino" : "Feminino", fx.label, distLbl(F.dist)].concat(F.uni === "__all" ? [] : [F.uni])
+    $("#ctx-title").innerHTML = rotuloCategoria(F.s, F.faixa, F.dist, F.uni)
       .map((p) => '<span class="nw">' + esc(p) + "</span>").join(" · ");
     $("#chip-n").innerHTML = "<b>" + lista.length + "</b> atleta" + (lista.length === 1 ? "" : "s");
     $("#chip-rec").innerHTML = per.rec + " <b>" + (categoria.length ? fmt(categoria[0].t) : "—") + "</b>";
@@ -470,23 +502,7 @@
       renderLateral(); return;
     }
     const lider = lista[0].t;
-    lanes.innerHTML = lista.slice(0, TOP).map((r, i) => {
-      const gap = r.t - lider, pct = Math.max(22, 100 - (gap / lider) * 320);
-      const ehRec = i === 0 && r === categoria[0];
-      return '<article class="lane lane--' + (i + 1) + ' spot" style="--u:' + UMAP[r.a.u].cor + ";--i:" + i + '" data-atleta="' + r.a.id + '">' +
-        (i === 0 ? '<span class="lane__shine" aria-hidden="true"></span>' : "") +
-        '<div class="lane__pos">' + (i + 1) + "<small>RAIA</small></div>" +
-        '<div class="lane__body"><div class="lane__name">' + linkAtleta(r.a) +
-        (i === 0 ? (ehRec ? ' <span class="tag tag--rec">' + (F.periodo === "geral" ? "Recorde" : "Melhor") + "</span>" : ' <span class="tag tag--lead">Líder</span>') : "") +
-        (r.a.me ? ' <span class="tag tag--pr">Você</span>' : "") + "</div>" +
-        '<div class="lane__meta">' + selo(r.a.u) +
-        '<span class="mi"><i></i>' + r.a.i + " anos</span>" +
-        '<span class="mi"><i></i>' + r.w + " W médios</span>" +
-        '<span class="mi"><i></i>' + dataCurta(r.d) + "</span>" +
-        (gap > 0 ? '<span class="mi mi--gap"><i></i>+' + gap.toFixed(1) + "s do líder</span>" : "") + "</div>" +
-        '<div class="gap"><span class="gap__fill" style="--w:' + pct.toFixed(1) + '%"><span class="boat">' + BARCO + "</span></span></div></div>" +
-        '<div class="lane__time"><b>' + fmt(r.t) + "</b><em>" + r.sp + " /500m</em></div></article>";
-    }).join("");
+    lanes.innerHTML = lista.slice(0, TOP).map((r, i) => raiaHTML(r, i, lider, i === 0 && r === categoria[0], false, F.s === "T")).join("");
 
     /* tabela — do 6º em diante */
     const resto = lista.slice(TOP);
@@ -498,7 +514,7 @@
         resto.map((r, k) =>
           '<tr class="' + (r.a.me ? "me" : "") + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + k + '">' +
           '<td class="pos" data-l="Posição">' + (k + TOP + 1) + "º</td>" +
-          '<td class="nome" data-l="Atleta">' + linkAtleta(r.a) + (r.a.me ? ' <span class="tag tag--pr">Você</span>' : "") + "</td>" +
+          '<td class="nome" data-l="Atleta">' + linkAtleta(r.a) + (F.s === "T" ? ' <span class="tag tag--muted">' + SEXO_CURTO[r.a.s] + "</span>" : "") + (r.a.me ? ' <span class="tag tag--pr">Você</span>' : "") + "</td>" +
           '<td class="t" data-l="Tempo">' + fmt(r.t) + "</td>" +
           '<td class="sec" data-l="Split /500m">' + r.sp + "</td>" +
           '<td class="sec num" data-l="Watts">' + r.w + "</td>" +
@@ -516,7 +532,7 @@
     const recs = [500, 1000].map((dist) => ({ dist, r: classificar({ s: F.s, faixa: F.faixa, dist })[0] }));
     const evo = evolucao30();
     $("#rk-side").innerHTML =
-      '<section class="card spot"><h3>Recordes da casa</h3><p class="card__hint">' + (F.s === "M" ? "Masculino" : "Feminino") + " · " + fx.label + " · toque para ver a distância</p>" +
+      '<section class="card spot"><h3>Recordes da casa</h3><p class="card__hint">' + esc(rotuloCategoria(F.s, F.faixa).join(" · ")) + " · toque para ver a distância</p>" +
       '<div class="reclist">' + recs.map((x) =>
         '<button type="button" class="rec" data-dist="' + x.dist + '" aria-pressed="' + (x.dist === F.dist) + '">' +
         '<span class="rec__d">' + distLbl(x.dist) + "</span>" +
@@ -1091,9 +1107,167 @@
     });
   }
 
+  /* ============================================================ MODO TV (telão)
+     Mostra a categoria que estava filtrada ao clicar em TV: GAME + categoria e o
+     1º ao 5º colocado, grande para ver de longe. Pode trocar de categoria sozinho. */
+  let tvCat = null, tvTimer = 0, tvOcioso = 0;
+  const TV_INTERVALO = 12000;
+
+  function renderTV() {
+    lerFiltros();
+    if (!tvCat) tvCat = { s: F.s, faixa: F.faixa, dist: F.dist };
+    const fx = FMAP[tvCat.faixa], per = PERIODOS[F.periodo];
+    const categoria = classificar({ s: tvCat.s, faixa: tvCat.faixa, dist: tvCat.dist, periodo: F.periodo });
+    const lista = (F.uni === "__all" ? categoria : categoria.filter((r) => r.a.u === F.uni)).slice(0, TOP);
+    // ao lado do GAME, a categoria do jeito do ranking oficial
+    const cs = categoriasTV(), pos = cs.findIndex((c) => c.s === tvCat.s && c.faixa === tvCat.faixa && c.dist === tvCat.dist);
+    $("#tv-per").textContent = per.rot + (tvTimer && pos >= 0 ? " · " + (pos + 1) + " de " + cs.length : "");
+    $("#tv-cat").innerHTML = rotuloCategoria(tvCat.s, tvCat.faixa, tvCat.dist, F.uni)
+      .map((p) => '<span class="nw">' + esc(p) + "</span>").join(" · ");
+    // barrinha que enche até a próxima troca (recomeça a cada categoria)
+    const tempo = $("#tv-tempo");
+    tempo.classList.toggle("is-on", !!tvTimer);
+    tempo.innerHTML = '<i style="animation-duration:' + TV_INTERVALO + 'ms"></i>';
+    // as mesmas raias do ranking, do 1º ao 5º
+    $("#tv-lanes").innerHTML = lista.length
+      ? lista.map((r, i) => raiaHTML(r, i, lista[0].t, i === 0 && r === categoria[0], true, tvCat.s === "T")).join("")
+      : '<div class="empty"><b>Nenhum tempo nessa categoria ainda</b>Assim que o professor validar um tempo, ele aparece aqui.</div>';
+    ajustarTV();
+  }
+  // o palco é desenhado no tamanho do desktop e ampliado até ocupar a TV inteira
+  function ajustarTV() {
+    const palco = $("#tv-palco"), view = $(".view--tv");
+    if (rotaAtual !== "tv" || !palco) return;
+    palco.style.zoom = "1";
+    const cs = getComputedStyle(view);
+    const w = view.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const h = view.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const z = Math.min(w / palco.offsetWidth, h / palco.offsetHeight);
+    palco.style.zoom = Math.max(0.5, z).toFixed(3);
+  }
+
+  // ordem pedida pelo cliente: masculino 500m subindo a idade, depois 1.000m; feminino igual;
+  // por fim o geral (todos juntos, sem filtro) em cada distância. Só entra categoria que tem alguém.
+  function categoriasTV() {
+    const out = [];
+    const tem = (c) => classificar({ s: c.s, faixa: c.faixa, dist: c.dist, periodo: F.periodo }).some((r) => F.uni === "__all" || r.a.u === F.uni);
+    ["M", "F"].forEach((s) => [500, 1000].forEach((dist) => FAIXAS.forEach((f) => {
+      const c = { s, faixa: f.id, dist };
+      if (tem(c)) out.push(c);
+    })));
+    [500, 1000].forEach((dist) => { const c = { s: "T", faixa: "todas", dist }; if (tem(c)) out.push(c); });
+    return out;
+  }
+  function proximaCategoriaTV() {
+    const cs = categoriasTV();
+    if (!cs.length) return;
+    const i = cs.findIndex((c) => c.s === tvCat.s && c.faixa === tvCat.faixa && c.dist === tvCat.dist);
+    tvCat = cs[(i + 1) % cs.length];
+    renderTV();
+  }
+  function rodizioTV(ligar) {
+    clearInterval(tvTimer); tvTimer = 0;
+    if (ligar) tvTimer = setInterval(proximaCategoriaTV, TV_INTERVALO);
+    $("#tv-rodizio").setAttribute("aria-pressed", String(!!ligar));
+    $("#tv-rodizio").textContent = ligar ? "Pausar troca automática" : "Retomar troca automática";
+  }
+  function sairTV() {
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    location.hash = "#/ranking";
+  }
+  // os botões da TV somem quando o mouse fica parado (tela limpa no telão)
+  function acordarTV() {
+    document.body.classList.remove("tv-ocioso");
+    clearTimeout(tvOcioso);
+    if (rotaAtual === "tv") tvOcioso = setTimeout(() => document.body.classList.add("tv-ocioso"), 2500);
+  }
+
+  // GAME no estilo da arte da marca: a letra é um mosaico de placas verdes (tons diferentes),
+  // separadas por rachaduras escuras, com algumas lascas faltando. Sempre igual (semente fixa).
+  function desenharGame() {
+    const gp = $("#game-placas"), gr = $("#game-rachas");
+    if (!gp || !gr) return;
+    const r = semente("studio-remo-game"), W = 440, H = 170, C = 31;
+    // pontos de um grid "tremido" viram o centro de cada placa
+    const pts = [];
+    for (let y = -C / 2; y < H + C; y += C) for (let x = -C / 2; x < W + C; x += C) {
+      pts.push([x + (r() - 0.5) * C * 0.95, y + (r() - 0.5) * C * 0.95]);
+    }
+    // corta um polígono pelo semiplano mais perto de "s" do que de "o" (Voronoi por recorte)
+    function recorta(poly, s, o) {
+      const mx = (s[0] + o[0]) / 2, my = (s[1] + o[1]) / 2, nx = o[0] - s[0], ny = o[1] - s[1], out = [];
+      const f = (q) => (q[0] - mx) * nx + (q[1] - my) * ny;
+      for (let k = 0; k < poly.length; k++) {
+        const a = poly[k], b = poly[(k + 1) % poly.length], fa = f(a), fb = f(b);
+        if (fa <= 0) out.push(a);
+        if ((fa <= 0) !== (fb <= 0)) { const u = fa / (fa - fb); out.push([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]); }
+      }
+      return out;
+    }
+    const verdes = ["#A4E54F", "#94DC45", "#86D33E", "#79C937", "#6CBE31", "#5EAF2C", "#4C9726"];
+    let placas = "";
+    pts.forEach((s) => {
+      if (s[0] < -C || s[0] > W + C || s[1] < -C || s[1] > H + C) return;
+      let poly = [[s[0] - C * 2, s[1] - C * 2], [s[0] + C * 2, s[1] - C * 2], [s[0] + C * 2, s[1] + C * 2], [s[0] - C * 2, s[1] + C * 2]];
+      pts.forEach((o) => {
+        if (o === s || Math.abs(o[0] - s[0]) > C * 3 || Math.abs(o[1] - s[1]) > C * 3) return;
+        poly = recorta(poly, s, o);
+      });
+      if (poly.length < 3 || r() < 0.035) return; // de vez em quando falta uma lasca
+      // encolhe a placa em direção ao centro: o vão vira a rachadura
+      const cx = poly.reduce((a, q) => a + q[0], 0) / poly.length, cy = poly.reduce((a, q) => a + q[1], 0) / poly.length;
+      const gap = 0.75 + r() * 0.35;
+      const pp = poly.map((q) => {
+        const dx = cx - q[0], dy = cy - q[1], dist = Math.hypot(dx, dy) || 1, k = Math.min(1, gap / dist);
+        return (q[0] + dx * k + (r() - 0.5) * 0.9).toFixed(1) + "," + (q[1] + dy * k + (r() - 0.5) * 0.9).toFixed(1);
+      });
+      const cor = verdes[Math.min(verdes.length - 1, Math.floor((r() + r()) / 2 * verdes.length))]; // a maioria nos tons do meio
+      placas += '<polygon points="' + pp.join(" ") + '" fill="' + cor + '"/>';
+    });
+    gp.innerHTML = placas;
+    // trincas finas dentro das placas
+    let d = "";
+    for (let i = 0; i < 22; i++) {
+      let x = r() * W, y = r() * H, ang = r() * Math.PI * 2;
+      const seg = [[x, y]];
+      for (let k = 0; k < 2 + Math.floor(r() * 3); k++) {
+        ang += (r() - 0.5) * 1.6; const passo = 4 + r() * 7;
+        x += Math.cos(ang) * passo; y += Math.sin(ang) * passo; seg.push([x, y]);
+      }
+      d += "M" + seg.map((q) => q[0].toFixed(1) + " " + q[1].toFixed(1)).join("L");
+    }
+    gr.innerHTML = '<path d="' + d + '" stroke="#0A2A0A" stroke-width="1" stroke-opacity=".85"/>';
+  }
+
+  function ligarTV() {
+    desenharGame();
+    $("#tv-btn").addEventListener("click", () => {
+      const el = document.documentElement;
+      if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
+    });
+    $("#tv-sair").addEventListener("click", sairTV);
+    $("#tv-rodizio").addEventListener("click", () => { rodizioTV(!tvTimer); renderTV(); });
+    document.addEventListener("pointermove", () => { if (rotaAtual === "tv") acordarTV(); }, { passive: true });
+    window.addEventListener("resize", ajustarTV);
+    document.addEventListener("fullscreenchange", () => setTimeout(ajustarTV, 60));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustarTV);
+    document.addEventListener("keydown", (e) => {
+      if (rotaAtual !== "tv") return;
+      acordarTV();
+      if (e.key === "Escape" && !document.fullscreenElement) sairTV();
+    });
+    // professor validou um tempo em outra aba deste navegador: telão e ranking atualizam sozinhos
+    window.addEventListener("storage", (e) => {
+      if (e.key !== CHAVE) return;
+      state = carregar() || state; _testes = null;
+      if (rotaAtual === "tv") renderTV();
+      else if (rotaAtual === "ranking") renderRanking();
+    });
+  }
+
   /* ============================================================ ROTEADOR */
-  const ROTAS = ["ranking", "progresso", "professor", "escopo"];
-  const TITULOS = { ranking: "Ranking", progresso: "Meu progresso", professor: "Área do professor", escopo: "Escopo" };
+  const ROTAS = ["ranking", "progresso", "professor", "escopo", "tv"];
+  const TITULOS = { ranking: "Ranking", progresso: "Meu progresso", professor: "Área do professor", escopo: "Escopo", tv: "TV" };
   let rotaAtual = null, primeiraVez = true;
 
   function lerRota() {
@@ -1110,6 +1284,9 @@
   function navegar() {
     const { r, param } = lerRota();
     const trocou = r !== rotaAtual;
+    // entrando ou saindo do modo TV
+    if (r !== "tv" && rotaAtual === "tv") { rodizioTV(false); tvCat = null; document.body.classList.remove("tv-ocioso"); }
+    document.body.classList.toggle("modo-tv", r === "tv");
     rotaAtual = r;
     $$(".view").forEach((v) => v.classList.toggle("is-active", v.dataset.view === r));
     $$("[data-route]").forEach((a) => (a.dataset.route === r ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
@@ -1118,6 +1295,7 @@
     if (r === "ranking") renderRanking();
     else if (r === "progresso") renderProgresso(param);
     else if (r === "professor") renderProfessor();
+    else if (r === "tv") { if (!tvTimer) rodizioTV(true); renderTV(); acordarTV(); }
     if (!primeiraVez && (trocou || r === "progresso")) window.scrollTo({ top: 0, behavior: "instant" });
     primeiraVez = false;
     if (r === "escopo") { revelar(); setTimeout(revelar, 350); }
@@ -1181,6 +1359,7 @@
   ligarRanking();
   ligarProgresso();
   ligarProfessor();
+  ligarTV();
   ligarGlobais();
   navegar();
 })();
