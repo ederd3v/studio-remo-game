@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Kaushan+Script&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=17">
+<link rel="stylesheet" href="assets/styles.css?v=18">
 <script>try{var t=localStorage.getItem('srg-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
@@ -73,25 +73,32 @@
       <div class="wrap hero__in">
         <p class="eyebrow rise">Remo indoor · Santa Catarina</p>
         <h1 id="h-ranking" class="rise" style="--d:1">O ranking da <em>casa</em>,<br> raia por raia.</h1>
-        <p class="hero__sub rise" style="--d:2">Todo tempo lançado no ergômetro entra na disputa. Escolha a categoria, a distância e a unidade — e veja onde você está.</p>
+        <p class="hero__sub rise" style="--d:2">Todo tempo lançado no ergômetro entra na disputa. Escolha o sexo, a idade, a categoria e a unidade — ou toque em Geral — e veja onde você está.</p>
 
-        <!-- filtros a um toque (celular e desktop): categoria e distância com pílula
+        <!-- filtros a um toque (celular e desktop): sexo e categoria com pílula
              deslizante, idade e unidade em botões. No desktop viram um painel com
              títulos; no celular os títulos somem e as fileiras deslizam para o lado. -->
         <div class="mf rise" style="--d:3" id="mf" role="search" aria-label="Filtros do ranking">
+          <!-- Geral: zera sexo e idade e mantém só a unidade e a categoria (500m, 1.000m ou best time) -->
+          <button type="button" class="geral" id="mf-geral" aria-pressed="false">
+            <span class="geral__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.4 2.7-5.6 6-5.6s6 2.2 6 5.6"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.8.2 4.5 2.1 4.5 5"/></svg></span>
+            <span class="geral__txt"><b>Geral</b><small id="mf-geral-sub">Homens e mulheres, todas as idades · todas as unidades</small></span>
+            <span class="geral__chk" aria-hidden="true"></span>
+          </button>
           <div class="mf__grp mf__grp--cat">
-            <span class="mf__lbl">Categoria</span>
-            <div class="mf__seg" role="group" aria-label="Categoria" style="--n:3">
+            <span class="mf__lbl">Sexo</span>
+            <div class="mf__seg" role="group" aria-label="Sexo" style="--n:3">
               <button type="button" data-mf-s="M" aria-pressed="true">Masculino</button>
               <button type="button" data-mf-s="F" aria-pressed="false">Feminino</button>
               <button type="button" data-mf-s="T" aria-pressed="false">Todos</button>
             </div>
           </div>
           <div class="mf__grp mf__grp--dist">
-            <span class="mf__lbl">Distância</span>
-            <div class="mf__seg" role="group" aria-label="Distância" style="--n:2">
-              <button type="button" data-mf-d="500" aria-pressed="true">500 metros</button>
-              <button type="button" data-mf-d="1000" aria-pressed="false">1.000 metros</button>
+            <span class="mf__lbl">Categoria</span>
+            <div class="mf__seg" role="group" aria-label="Categoria" style="--n:3">
+              <button type="button" data-mf-d="500" aria-pressed="true">500m</button>
+              <button type="button" data-mf-d="1000" aria-pressed="false">1.000m</button>
+              <button type="button" data-mf-d="1" aria-pressed="false">Best time</button>
             </div>
           </div>
           <div class="mf__grp mf__grp--faixa">
@@ -126,7 +133,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 12h20M6 8v8M18 8v8"/></svg>
                 Distância
               </label>
-              <select id="f-dist"><option value="500">500 metros</option><option value="1000">1.000 metros</option></select>
+              <select id="f-dist"><option value="500">500 metros</option><option value="1000">1.000 metros</option><option value="1">Best time</option></select>
             </div>
             <div class="fld">
               <label class="eyebrow" for="f-uni">
@@ -143,23 +150,24 @@
 
     <div class="wrap">
       <div class="ctx">
-        <h2><small id="ctx-eyebrow">Classificação geral</small><span id="ctx-title">Masculino · 20–24 anos · 500m</span></h2>
-        <div class="seg" id="periodo" role="group" aria-label="Recorte de período">
-          <button type="button" data-p="geral" aria-pressed="true">Geral</button>
-          <button type="button" data-p="12m" aria-pressed="false">12 meses</button>
-          <button type="button" data-p="30d" aria-pressed="false">30 dias</button>
-        </div>
-        <span class="chip" id="chip-n"><b>0</b> atletas</span>
-        <span class="chip chip--rec" id="chip-rec">Recorde da casa <b>—</b></span>
+        <h2><small>Classificação geral</small><span id="ctx-title">Masculino · Cat. B · 20–24 anos · 500m</span></h2>
       </div>
 
-      <div class="split">
-        <div>
-          <div class="lanes" id="lanes"></div>
-          <div class="tablewrap"><div id="tablehost"></div></div>
-        </div>
-
+      <!-- pódio (top 5) ao lado de recordes e evolução; embaixo, a tabela de todos ocupando a largura inteira -->
+      <div class="rk">
+        <div class="lanes" id="lanes"></div>
         <aside class="side" id="rk-side" aria-label="Recordes e destaques"></aside>
+        <section class="rk-todos" id="rk-todos" aria-labelledby="rk-todos-t">
+          <div class="rk-todos__head">
+            <div><h3 id="rk-todos-t">Todos os atletas</h3><p class="card__hint" id="rk-info"></p></div>
+            <label class="busca">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+              <input type="search" id="rk-busca" placeholder="Buscar atleta pelo nome" autocomplete="off" aria-label="Buscar atleta pelo nome">
+            </label>
+          </div>
+          <div class="tablewrap"><div id="tablehost"></div></div>
+          <div class="rk-todos__foot" id="rk-foot"></div>
+        </section>
       </div>
     </div>
   </section>
@@ -170,7 +178,7 @@
       <div class="phead phead--row">
         <div>
           <p class="eyebrow rise">Meu progresso</p>
-          <h1 id="h-prog" class="rise" style="--d:1">Sua <em>evolução</em>,<br> teste a teste.</h1>
+          <h1 id="h-prog" class="rise pg-titulo" style="--d:1"><svg class="pg-game" data-logo="game" aria-label="Game"></svg></h1>
         </div>
         <div class="picker rise" style="--d:2">
           <label class="eyebrow" for="pg-atleta">Ver o perfil de</label>
@@ -207,10 +215,10 @@
           <span class="front__n" aria-hidden="true">01</span>
           <p class="eyebrow">Frente 1 · Competição</p>
           <h3>O ranking da casa</h3>
-          <p>Todo tempo validado entra numa classificação pública — por categoria, faixa etária, distância e unidade.</p>
+          <p>Todo tempo validado entra numa classificação pública — por sexo, faixa etária, categoria e unidade.</p>
           <ul class="checks">
-            <li>Pódio em raias com o top 5 e tabela completa do 6º em diante</li>
-            <li>Recortes geral, 12 meses e 30 dias — quem chegou agora também disputa</li>
+            <li>Pódio com o top 5 e tabela de todos os atletas, com busca pelo nome</li>
+            <li>Botão Geral: homens e mulheres de todas as idades numa classificação só</li>
             <li>Ranking por unidade: Itajaí, Navegantes, Joinville e Balneário Camboriú</li>
             <li>Recorde da casa em destaque, com aviso quando cai</li>
           </ul>
@@ -251,7 +259,7 @@
           <div class="step" style="--i:2">
             <span class="step__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V13h6v8M9 21V8h6v13M15 21v-6h6v6M2 21h20"/></svg></span>
             <b>Sistema classifica</b>
-            <p>Categoria, faixa etária, distância e unidade — na hora, sem planilha.</p>
+            <p>Sexo, faixa etária, categoria e unidade — na hora, sem planilha.</p>
           </div>
           <div class="step step--rec" style="--i:3">
             <span class="step__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></span>
@@ -265,12 +273,12 @@
         <p class="eyebrow">Regras do jogo</p>
         <h2>O que define a classificação</h2>
         <div class="rules">
-          <div class="rule reveal" style="--i:0"><span class="eyebrow">Categorias</span><div class="pills"><span>Masculino</span><span>Feminino</span></div></div>
-          <div class="rule reveal" style="--i:1"><span class="eyebrow">Faixas etárias</span><div class="pills"><span>20–24</span><span>25–29</span><span>30–39</span><span>40–49</span><span>50+</span></div></div>
-          <div class="rule reveal" style="--i:2"><span class="eyebrow">Distâncias</span><div class="pills"><span>500m</span><span>1.000m</span><span>2.000m</span></div></div>
+          <div class="rule reveal" style="--i:0"><span class="eyebrow">Sexo</span><div class="pills"><span>Masculino</span><span>Feminino</span></div></div>
+          <div class="rule reveal" style="--i:1"><span class="eyebrow">Faixas etárias</span><div class="pills"><span>A 15–19</span><span>B 20–24</span><span>C 25–29</span><span>D 30–34</span><span>E 35–39</span><span>F 40–44</span><span>G 45–49</span><span>H 50–54</span><span>I 55–59</span><span>J 60–64</span><span>K 65–69</span><span>L 70+</span></div></div>
+          <div class="rule reveal" style="--i:2"><span class="eyebrow">Categorias</span><div class="pills"><span>500m</span><span>1.000m</span><span>Best time</span></div></div>
           <div class="rule reveal" style="--i:3"><span class="eyebrow">Validação</span><p>Só professor lança ou valida, com PIN. Cada lançamento guarda quem, quando e de qual tablet.</p></div>
           <div class="rule reveal" style="--i:4"><span class="eyebrow">Desempate</span><p>Tempo igual? Fica à frente quem marcou primeiro.</p></div>
-          <div class="rule reveal" style="--i:5"><span class="eyebrow">Recortes</span><p>Geral, últimos 12 meses e últimos 30 dias — o recorde histórico não trava a motivação de quem chegou agora.</p></div>
+          <div class="rule reveal" style="--i:5"><span class="eyebrow">Geral</span><p>Um toque mostra todo mundo junto — homens e mulheres, todas as idades — na unidade escolhida ou em todas.</p></div>
         </div>
       </div>
 
@@ -294,7 +302,7 @@
             <ul class="checks checks--sm">
               <li>Níveis, XP e conquistas</li>
               <li>Próximo alvo no ranking</li>
-              <li>Gráfico de evolução por distância</li>
+              <li>Gráfico de evolução por categoria</li>
               <li>Histórico de testes</li>
             </ul>
           </article>
@@ -371,7 +379,7 @@
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
-<script src="assets/logo.js?v=2"></script>
-<script src="assets/app.js?v=17"></script>
+<script src="assets/logo.js?v=3"></script>
+<script src="assets/app.js?v=18"></script>
 </body>
 </html>

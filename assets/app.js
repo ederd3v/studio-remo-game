@@ -24,9 +24,14 @@
     const m = Math.floor(sec / 60), r = r1(sec - m * 60);
     return m + ":" + (r < 10 ? "0" : "") + r.toFixed(1);
   }
-  const split = (t, dist) => fmt(t / (dist / 500));
-  const watts = (t, dist) => { const p = t / dist; return Math.round(2.8 / (p * p * p)); };
-  const distLbl = (d) => (d === 500 ? "500m" : d === 1000 ? "1.000m" : "2.000m");
+  // as três categorias do ranking: 500m, 1.000m e best time (BT). O best time é medido
+  // por tempo, como as outras, mas não tem distância fixa — então não tem split nem watts.
+  const BT = 1;
+  const DISTS = [500, 1000, BT];
+  const split = (t, dist) => (dist === BT ? null : fmt(t / (dist / 500)));
+  const watts = (t, dist) => { if (dist === BT) return null; const p = t / dist; return Math.round(2.8 / (p * p * p)); };
+  const distLbl = (d) => (d === 500 ? "500m" : d === 1000 ? "1.000m" : "Best time");
+  const normal = (s) => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const dd = (n) => ("0" + n).slice(-2);
   const dataCurta = (d) => dd(d.getDate()) + "/" + dd(d.getMonth() + 1) + "/" + String(d.getFullYear()).slice(-2);
   const hora = (d) => dd(d.getHours()) + ":" + dd(d.getMinutes());
@@ -89,13 +94,12 @@
   const UMAP = {}; UNIDADES.forEach((u) => (UMAP[u.nome] = u));
   const curto = (p) => p.split(" ").slice(0, 2).join(" ");
 
-  const FAIXAS = [
-    { id: "20-24", label: "20–24 anos", min: 20, max: 24 },
-    { id: "25-29", label: "25–29 anos", min: 25, max: 29 },
-    { id: "30-39", label: "30–39 anos", min: 30, max: 39 },
-    { id: "40-49", label: "40–49 anos", min: 40, max: 49 },
-    { id: "50+", label: "50 anos ou mais", min: 50, max: 120 },
-  ];
+  // categorias por idade: de 5 em 5 anos, cada uma com a sua letra — A (15–19), B (20–24) … L (70+)
+  const FAIXAS = [];
+  for (let min = 15, k = 0; min <= 70; min += 5, k++) {
+    const letra = String.fromCharCode(65 + k), ultima = min === 70, idade = ultima ? "70+" : min + "–" + (min + 4);
+    FAIXAS.push({ id: letra, letra, idade, label: "Cat. " + letra + " · " + idade + " anos", min, max: ultima ? 120 : min + 4 });
+  }
   const FMAP = {}; FAIXAS.forEach((f) => (FMAP[f.id] = f));
   const faixaDe = (a) => FAIXAS.find((f) => a.i >= f.min && a.i <= f.max);
   // "sem filtro": todas as idades e os dois sexos juntos (fora de FAIXAS, que são as faixas reais)
@@ -105,7 +109,7 @@
   const SEXO_CURTO = { M: "Masc.", F: "Fem." };
   // como a categoria aparece nos títulos (ranking, recordes e telão)
   function rotuloCategoria(s, faixa, dist, uni) {
-    const partes = s === "T" && faixa === "todas" ? ["Geral · todos os atletas"] : [SEXOS[s], FMAP[faixa].label];
+    const partes = s === "T" && faixa === "todas" ? ["Geral · todos os atletas"] : [s === "T" ? "Masculino e feminino" : SEXOS[s], FMAP[faixa].label];
     if (dist) partes.push(distLbl(dist));
     if (uni && uni !== "__all") partes.push(uni);
     return partes;
@@ -115,12 +119,6 @@
     { min: 0, n: "Estreante" }, { min: 400, n: "Remador" }, { min: 900, n: "Voga" },
     { min: 1600, n: "Capitão de raia" }, { min: 2500, n: "Lenda da casa" },
   ];
-
-  const PERIODOS = {
-    geral: { rot: "Classificação geral", curto: "Geral", rec: "Recorde da casa", dias: 0 },
-    "12m": { rot: "Últimos 12 meses", curto: "12 meses", rec: "Melhor em 12 meses", dias: 365 },
-    "30d": { rot: "Últimos 30 dias", curto: "30 dias", rec: "Melhor em 30 dias", dias: 30 },
-  };
 
   /* ---------- atletas (b = melhor tempo de 500m em segundos) ---------- */
   const ATLETAS = [
@@ -168,15 +166,33 @@
     { n: "Silvana Duarte", s: "F", i: 42, u: "Itajaí", b: 123.8 },
     { n: "Márcia Feldmann", s: "F", i: 45, u: "Navegantes", b: 127.5 },
     { n: "Vera Lúcia Amaral", s: "F", i: 55, u: "Joinville", b: 131.2 },
+    { n: "Kauã Schmitt", s: "M", i: 17, u: "Itajaí", b: 104.5 },
+    { n: "Arthur Wolff", s: "M", i: 16, u: "Joinville", b: 108.2 },
+    { n: "Davi Moretti", s: "M", i: 19, u: "Navegantes", b: 101.9 },
+    { n: "Helena Zanatta", s: "F", i: 18, u: "Itajaí", b: 117.8 },
+    { n: "Lara Probst", s: "F", i: 16, u: "Balneário Camboriú", b: 121.6 },
+    { n: "Fernanda Coelho", s: "F", i: 38, u: "Balneário Camboriú", b: 119.2 },
+    { n: "Daniela Rauen", s: "F", i: 43, u: "Balneário Camboriú", b: 124.0 },
+    { n: "Adriana Pamplona", s: "F", i: 47, u: "Joinville", b: 125.1 },
+    { n: "Ricardo Hermes", s: "M", i: 52, u: "Balneário Camboriú", b: 114.9 },
+    { n: "Rosana Tomelin", s: "F", i: 51, u: "Itajaí", b: 129.0 },
+    { n: "Luiz Carlos Neves", s: "M", i: 57, u: "Joinville", b: 116.2 },
+    { n: "Valdir Schroeder", s: "M", i: 63, u: "Itajaí", b: 121.3 },
+    { n: "Lourdes Bauer", s: "F", i: 62, u: "Navegantes", b: 136.4 },
+    { n: "Edson Krieger", s: "M", i: 67, u: "Balneário Camboriú", b: 126.8 },
+    { n: "Teresinha Moser", s: "F", i: 66, u: "Joinville", b: 140.2 },
+    { n: "Arno Pfiffer", s: "M", i: 72, u: "Joinville", b: 131.5 },
+    { n: "Hélio Buss", s: "M", i: 75, u: "Itajaí", b: 135.9 },
+    { n: "Irene Koch", s: "F", i: 71, u: "Itajaí", b: 146.3 },
   ];
   const AMAP = {};
   const EU = ATLETAS.find((a) => a.me);
 
   /* ---------- histórico simulado ----------
      A academia roda dia de teste uma vez por mês. Cada atleta tem de 5 a 12 meses
-     de testes, melhorando aos poucos até o melhor tempo (b). O 1.000m e o 2.000m
-     derivam do 500m com um fator de resistência. */
-  const base = (b, dist) => (dist === 500 ? b : dist === 1000 ? b * 2 * 1.055 : b * 4 * 1.115);
+     de testes, melhorando aos poucos até o melhor tempo (b). O 1.000m deriva do 500m
+     com um fator de resistência; o best time usa uma escala própria (dados de exemplo). */
+  const base = (b, dist) => (dist === 500 ? b : dist === 1000 ? b * 2 * 1.055 : b * 0.93);
   const ME500 = [106.2, 105.4, 104.1, 104.6, 102.3, 101.4, 100.0];
   const SEED = [];
   let seq = 0;
@@ -186,7 +202,7 @@
     const r = semente(a.n);
     const meses = a.me ? ME500.length : 5 + Math.floor(r() * 8);
     const g = 0.035 + r() * 0.055;
-    const cal = { 500: [], 1000: [], 2000: [] };
+    const cal = { 500: [], 1000: [], [BT]: [] };
     for (let k = meses - 1; k >= 0; k--) {
       const vai = a.me || k === meses - 1 || r() < (k === 0 ? 0.78 : 0.82);
       if (!vai) continue;
@@ -194,14 +210,14 @@
       d.setHours(7 + Math.floor(r() * 11), Math.floor(r() * 60));
       cal[500].push(d);
       if (r() < 0.42) cal[1000].push(new Date(d.getTime() + 40 * 6e4));
-      if (r() < 0.3) cal[2000].push(new Date(d.getTime() + 75 * 6e4));
+      if (r() < 0.45) cal[BT].push(new Date(d.getTime() + 75 * 6e4));
     }
-    [1000, 2000].forEach((dist) => {
+    [1000, BT].forEach((dist) => {
       if (cal[dist].length) return;
       const src = cal[500][Math.floor(r() * cal[500].length)];
       cal[dist].push(new Date(src.getTime() + (dist === 1000 ? 40 : 75) * 6e4));
     });
-    [500, 1000, 2000].forEach((dist) => {
+    DISTS.forEach((dist) => {
       const ds = cal[dist].sort((x, y) => x - y), n = ds.length, bt = base(a.b, dist);
       let vals;
       if (a.me && dist === 500) vals = ME500.slice();
@@ -245,13 +261,11 @@
   /* ---------- consultas ---------- */
   const corte = (dias) => new Date(HOJE.getTime() - dias * DIA);
   function classificar(o) {
-    const fx = FMAP[o.faixa], P = PERIODOS[o.periodo || "geral"], lim = P.dias ? corte(P.dias) : null;
-    const best = {};
+    const fx = FMAP[o.faixa], best = {};
     testes().forEach((t) => {
       if (t.dist !== o.dist || t.id === o.excluir) return;
       const a = AMAP[t.a];
       if ((o.s !== "T" && a.s !== o.s) || a.i < fx.min || a.i > fx.max) return;
-      if (lim && t.d < lim) return;
       const c = best[t.a];
       if (!c || t.t < c.t || (t.t === c.t && t.d < c.d)) best[t.a] = t;
     });
@@ -282,10 +296,10 @@
     };
   }
 
-  function evolucao30() {
+  function evolucao30(dist) {
     const lim = corte(30), por = {};
     testes().forEach((t) => {
-      if (t.dist !== 500) return;
+      if (t.dist !== dist) return;
       const o = por[t.a] || (por[t.a] = { antes: Infinity, agora: Infinity });
       if (t.d < lim) o.antes = Math.min(o.antes, t.t); else o.agora = Math.min(o.agora, t.t);
     });
@@ -368,23 +382,23 @@
   }
 
   /* ============================================================ RANKING */
-  const F = { s: "M", faixa: "20-24", dist: 500, uni: "__all", periodo: "geral" };
+  const F = { s: "M", faixa: "B", dist: 500, uni: "__all" };
   const TOP = 5;
-  // no celular o ranking é uma lista única e simples (sem raias, barras e tabela)
+  // no celular o ranking é uma lista única e simples (sem pódio, barras e tabela)
   const CELULAR = matchMedia("(max-width: 640px)");
 
-  function listaSimples(lista, categoria) {
-    const lider = lista[0].t;
+  // lista simples do celular — recebe [{ r, pos }] (a posição vem da classificação inteira)
+  function listaSimples(itens, categoria, lider) {
     // filtrando por unidade, a lista acende na cor dela
     const uni = F.uni === "__all" ? null : UMAP[F.uni];
-    return '<ol class="rlist' + (uni ? " rlist--uni" : "") + '"' + (uni ? ' style="--u:' + uni.cor + '"' : "") + ">" + lista.map((r, i) => {
-      const gap = r.t - lider, ehRec = i === 0 && r === categoria[0];
+    return '<ol class="rlist' + (uni ? " rlist--uni" : "") + '"' + (uni ? ' style="--u:' + uni.cor + '"' : "") + ">" + itens.map(({ r, pos }, k) => {
+      const gap = r.t - lider, ehRec = pos === 1 && r === categoria[0];
       // destaque de recorde (branco) só para quem tem o recorde da categoria; líder de um recorte por unidade fica neutro
-      return '<li><a class="rrow' + (ehRec ? " rrow--lead" : "") + (r.a.me ? " rrow--me" : "") + '" href="#/progresso/' + r.a.id + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + Math.min(i, 12) + '">' +
-        '<span class="rrow__pos">' + (i + 1) + "</span>" +
+      return '<li><a class="rrow' + (ehRec ? " rrow--lead" : "") + (r.a.me ? " rrow--me" : "") + '" href="#/progresso/' + r.a.id + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + Math.min(k, 12) + '">' +
+        '<span class="rrow__pos">' + pos + "</span>" +
         '<span class="rrow__who"><b>' + esc(r.a.n) + (r.a.me ? " <em>você</em>" : "") + "</b>" +
-        "<small><i></i>" + esc(r.a.u) + (F.s === "T" ? " · " + SEXO_CURTO[r.a.s] : "") + (gap > 0 ? " · +" + gap.toFixed(1) + "s" : "") + "</small></span>" +
-        '<span class="rrow__t"><b>' + fmt(r.t) + "</b>" + (ehRec ? "<small>" + (F.periodo === "geral" ? "Recorde" : "Melhor") + "</small>" : i === 0 ? '<small class="is-lider">Líder</small>' : "") + "</span></a></li>";
+        "<small><i></i>" + esc(r.a.u) + (F.s === "T" ? " · " + SEXO_CURTO[r.a.s] : "") + " · Cat. " + faixaDe(r.a).letra + (gap > 0 ? " · +" + gap.toFixed(1) + "s" : "") + "</small></span>" +
+        '<span class="rrow__t"><b>' + fmt(r.t) + "</b>" + (ehRec ? "<small>Recorde</small>" : pos === 1 ? '<small class="is-lider">Líder</small>' : "") + "</span></a></li>";
     }).join("") + "</ol>";
   }
 
@@ -400,16 +414,23 @@
 
   /* filtros a um toque (celular e desktop). Espelham os selects escondidos,
      que continuam sendo a fonte da verdade. */
+  let antesDoGeral = null; // sexo e idade de antes de ligar o Geral (desligar volta para eles)
   function montarFiltrosCelular() {
-    // "anos" só aparece no celular — no desktop o título "Faixa etária" já diz
+    // a letra da categoria sempre à vista; "anos" só no celular — no desktop o título "Faixa etária" já diz
     $("#mf-faixa").innerHTML = '<button type="button" class="chip-btn" data-mf-f="todas"><span>Todas<span class="chip-anos"> as idades</span></span></button>' + FAIXAS.map((f) =>
-      '<button type="button" class="chip-btn" data-mf-f="' + f.id + '"><span>' + (f.id === "50+" ? "50+" : f.label.replace(" anos", "")) + '<span class="chip-anos"> anos</span></span></button>').join("");
+      '<button type="button" class="chip-btn" data-mf-f="' + f.id + '"><b class="chip-cat">' + f.letra + "</b><span>" + f.idade + '<span class="chip-anos"> anos</span></span></button>').join("");
     $("#mf-uni").innerHTML = '<button type="button" class="chip-btn" data-mf-u="__all">Todas as unidades</button>' +
       UNIDADES.map((u) => '<button type="button" class="chip-btn" data-mf-u="' + esc(u.nome) + '" style="--u:' + u.cor + '"><i></i>' + esc(u.nome) + "</button>").join("");
     $("#mf").addEventListener("click", (e) => {
       const b = e.target.closest("button");
       if (!b) return;
-      if (b.dataset.mfS) $("#f-sexo").value = b.dataset.mfS;
+      if (b.id === "mf-geral") {
+        // Geral: homens e mulheres, todas as idades — só a unidade e a categoria continuam valendo
+        const ligado = F.s === "T" && F.faixa === "todas";
+        if (!ligado) { antesDoGeral = { s: F.s, faixa: F.faixa }; $("#f-sexo").value = "T"; $("#f-faixa").value = "todas"; }
+        else { const v = antesDoGeral || { s: "M", faixa: "B" }; $("#f-sexo").value = v.s; $("#f-faixa").value = v.faixa; }
+      }
+      else if (b.dataset.mfS) $("#f-sexo").value = b.dataset.mfS;
       else if (b.dataset.mfD) $("#f-dist").value = b.dataset.mfD;
       else if (b.dataset.mfF) $("#f-faixa").value = b.dataset.mfF;
       else if (b.dataset.mfU) $("#f-uni").value = b.dataset.mfU;
@@ -435,6 +456,9 @@
     $$("[data-mf-d]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.mfD === F.dist)));
     $$("[data-mf-f]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mfF === F.faixa)));
     $$("[data-mf-u]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mfU === F.uni)));
+    const geral = F.s === "T" && F.faixa === "todas";
+    $("#mf-geral").setAttribute("aria-pressed", String(geral));
+    $("#mf-geral-sub").textContent = "Homens e mulheres, todas as idades · " + (F.uni === "__all" ? "todas as unidades" : F.uni);
     trazerParaVista($("#mf-faixa"), $('#mf-faixa [aria-pressed="true"]'));
     trazerParaVista($("#mf-uni"), $('#mf-uni [aria-pressed="true"]'));
     // a pílula verde desliza até o botão escolhido
@@ -448,131 +472,154 @@
   }
   function aplicarFiltros(o) {
     Object.assign(F, o);
-    // o ranking só tem as distâncias do select (500 e 1.000m); outra distância cai no 500m
-    if (!$$("#f-dist option").some((op) => +op.value === F.dist)) F.dist = 500;
+    if (DISTS.indexOf(F.dist) < 0) F.dist = 500;
     $("#f-sexo").value = F.s; $("#f-faixa").value = F.faixa; $("#f-dist").value = String(F.dist); $("#f-uni").value = F.uni;
-    $$("#periodo button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.p === F.periodo)));
   }
 
-  // uma raia do pódio — a mesma no ranking e no telão (no telão o nome não é link e não tem "Você")
+  // uma posição do pódio — a mesma no ranking e no telão (no telão o nome não é link e não tem "Você")
   function raiaHTML(r, i, lider, ehRec, noTelao, comSexo) {
     const gap = r.t - lider, pct = Math.max(22, 100 - (gap / lider) * 320);
     return '<article class="lane lane--' + (i + 1) + ' spot" style="--u:' + UMAP[r.a.u].cor + ";--i:" + i + '" data-atleta="' + r.a.id + '">' +
       (i === 0 ? '<span class="lane__shine" aria-hidden="true"></span>' : "") +
       '<div class="lane__pos">' + (i + 1) + "</div>" +
       '<div class="lane__body"><div class="lane__name">' + (noTelao ? esc(r.a.n) : linkAtleta(r.a)) +
-      (i === 0 ? (ehRec ? ' <span class="tag tag--rec">' + (F.periodo === "geral" ? "Recorde" : "Melhor") + "</span>" : ' <span class="tag tag--lead">Líder</span>') : "") +
+      (i === 0 ? (ehRec ? ' <span class="tag tag--rec">Recorde</span>' : ' <span class="tag tag--lead">Líder</span>') : "") +
       (r.a.me && !noTelao ? ' <span class="tag tag--pr">Você</span>' : "") + "</div>" +
       '<div class="lane__meta">' + selo(r.a.u) +
       (comSexo ? '<span class="mi"><i></i>' + SEXOS[r.a.s] + "</span>" : "") +
-      '<span class="mi"><i></i>' + r.a.i + " anos</span>" +
-      '<span class="mi"><i></i>' + r.w + " W médios</span>" +
+      '<span class="mi"><i></i>' + r.a.i + " anos · Cat. " + faixaDe(r.a).letra + "</span>" +
+      (r.w != null ? '<span class="mi"><i></i>' + r.w + " W médios</span>" : "") +
       '<span class="mi"><i></i>' + dataCurta(r.d) + "</span>" +
       (gap > 0 ? '<span class="mi mi--gap"><i></i>+' + gap.toFixed(1) + "s do líder</span>" : "") + "</div>" +
       '<div class="gap"><span class="gap__fill" style="--w:' + pct.toFixed(1) + '%"><span class="boat">' + BARCO + "</span></span></div></div>" +
-      '<div class="lane__time"><b>' + fmt(r.t) + "</b><em>" + r.sp + " /500m</em></div></article>";
+      '<div class="lane__time"><b>' + fmt(r.t) + "</b>" + (r.sp ? "<em>" + r.sp + " /500m</em>" : "") + "</div></article>";
   }
 
+  /* tabela de todos os atletas: começa com 10, "ver mais" abre de 10 em 10, a lupa busca pelo nome */
+  const PASSO = 10;
+  let rkAtual = { lista: [], categoria: [] }, rkMostra = PASSO, rkBusca = "";
   let rankingNoCelular = null; // em qual modo o ranking foi desenhado por último
+
   function renderRanking() {
     lerFiltros();
     sincronizarFiltrosCelular();
     rankingNoCelular = CELULAR.matches;
-    const per = PERIODOS[F.periodo], fx = FMAP[F.faixa];
-    const categoria = classificar({ s: F.s, faixa: F.faixa, dist: F.dist, periodo: F.periodo });
+    const categoria = classificar({ s: F.s, faixa: F.faixa, dist: F.dist });
     const lista = F.uni === "__all" ? categoria : categoria.filter((r) => r.a.u === F.uni);
+    rkAtual = { lista, categoria };
+    rkMostra = PASSO;
 
-    $("#ctx-eyebrow").textContent = per.rot;
     // cada pedaço fica inteiro na quebra de linha ("20–24 anos" não parte no traço)
     $("#ctx-title").innerHTML = rotuloCategoria(F.s, F.faixa, F.dist, F.uni)
       .map((p) => '<span class="nw">' + esc(p) + "</span>").join(" · ");
-    $("#chip-n").innerHTML = "<b>" + lista.length + "</b> atleta" + (lista.length === 1 ? "" : "s");
-    $("#chip-rec").innerHTML = per.rec + " <b>" + (categoria.length ? fmt(categoria[0].t) : "—") + "</b>";
 
-    /* raias — top 5 */
-    const lanes = $("#lanes"), host = $("#tablehost");
-    lanes.innerHTML = "";
-    if (!lista.length) {
-      host.innerHTML = '<div class="empty"><b>Nenhum tempo nesse recorte</b>Ainda não há resultado para essa combinação. Mude o período ou peça ao professor para lançar.</div>';
-      renderLateral(); return;
-    }
-    if (CELULAR.matches) {
-      lanes.innerHTML = listaSimples(lista, categoria);
-      host.innerHTML = "";
-      renderLateral(); return;
-    }
-    const lider = lista[0].t;
-    lanes.innerHTML = lista.slice(0, TOP).map((r, i) => raiaHTML(r, i, lider, i === 0 && r === categoria[0], false, F.s === "T")).join("");
-
-    /* tabela — do 6º em diante */
-    const resto = lista.slice(TOP);
-    if (!resto.length) {
-      host.innerHTML = '<div class="empty"><b>Todo mundo está no pódio</b>Essa categoria tem ' + lista.length + " atleta(s) — cabem todos nas raias.</div>";
-    } else {
-      host.innerHTML = "<table><thead><tr><th>Pos</th><th>Atleta</th><th>Tempo</th><th>Split /500m</th>" +
-        '<th class="num">Watts</th><th class="num">Idade</th><th>Data</th><th>Unidade</th><th class="num">Dif.</th></tr></thead><tbody>' +
-        resto.map((r, k) =>
-          '<tr class="' + (r.a.me ? "me" : "") + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + k + '">' +
-          '<td class="pos" data-l="Posição">' + (k + TOP + 1) + "º</td>" +
-          '<td class="nome" data-l="Atleta">' + linkAtleta(r.a) + (F.s === "T" ? ' <span class="tag tag--muted">' + SEXO_CURTO[r.a.s] + "</span>" : "") + (r.a.me ? ' <span class="tag tag--pr">Você</span>' : "") + "</td>" +
-          '<td class="t" data-l="Tempo">' + fmt(r.t) + "</td>" +
-          '<td class="sec" data-l="Split /500m">' + r.sp + "</td>" +
-          '<td class="sec num" data-l="Watts">' + r.w + "</td>" +
-          '<td class="sec num" data-l="Idade">' + r.a.i + "</td>" +
-          '<td class="sec" data-l="Data">' + dataCurta(r.d) + "</td>" +
-          '<td class="uni" data-l="Unidade">' + selo(r.a.u) + "</td>" +
-          '<td class="num dif" data-l="Dif. do líder"><span class="delta">+' + (r.t - lider).toFixed(1) + "s</span></td></tr>"
-        ).join("") + "</tbody></table>";
-    }
+    /* pódio — top 5 (no celular a lista de todos já mostra) */
+    const lanes = $("#lanes");
+    lanes.innerHTML = !lista.length || CELULAR.matches ? "" :
+      lista.slice(0, TOP).map((r, i) => raiaHTML(r, i, lista[0].t, i === 0 && r === categoria[0], false, F.s === "T")).join("");
+    renderTabela();
     renderLateral();
   }
 
+  function renderTabela() {
+    const { lista, categoria } = rkAtual, host = $("#tablehost"), pe = $("#rk-foot");
+    const lider = lista.length ? lista[0].t : 0, q = normal(rkBusca.trim());
+    const todos = lista.map((r, i) => ({ r, pos: i + 1 }));
+    const achados = q ? todos.filter((x) => normal(x.r.a.n).indexOf(q) >= 0) : todos;
+    const vis = q ? achados : achados.slice(0, rkMostra);
+    const rot = rotuloCategoria(F.s, F.faixa, F.dist, F.uni).join(" · ");
+    $("#rk-info").textContent = (q ? achados.length + " de " + lista.length : lista.length) + " atleta" + (lista.length === 1 ? "" : "s") + " · " + rot;
+
+    pe.innerHTML = "";
+    if (!lista.length) {
+      host.innerHTML = '<div class="empty"><b>Nenhum tempo nessa categoria</b>Ainda não há resultado para essa combinação. Experimente o Geral ou peça ao professor para lançar.</div>';
+      return;
+    }
+    if (!vis.length) {
+      host.innerHTML = '<div class="empty"><b>Ninguém com “' + esc(rkBusca.trim()) + '” aqui</b>A busca olha só esta categoria. Para procurar em todos os atletas, use o Geral com todas as unidades.</div>';
+      return;
+    }
+    if (CELULAR.matches) host.innerHTML = listaSimples(vis, categoria, lider);
+    else {
+      const comSplit = F.dist !== BT;
+      host.innerHTML = "<table><thead><tr><th>Pos</th><th>Atleta</th><th>Tempo</th>" + (comSplit ? '<th>Split /500m</th><th class="num">Watts</th>' : "") +
+        '<th class="num">Idade</th><th>Cat.</th><th>Data</th><th>Unidade</th><th class="num">Dif.</th></tr></thead><tbody>' +
+        vis.map(({ r, pos }, k) =>
+          '<tr class="' + (r.a.me ? "me" : "") + (pos <= 3 ? " top" : "") + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + Math.min(k, 12) + '">' +
+          '<td class="pos" data-l="Posição">' + pos + "º</td>" +
+          '<td class="nome" data-l="Atleta">' + linkAtleta(r.a) + (F.s === "T" ? ' <span class="tag tag--muted">' + SEXO_CURTO[r.a.s] + "</span>" : "") + (r.a.me ? ' <span class="tag tag--pr">Você</span>' : "") + "</td>" +
+          '<td class="t" data-l="Tempo">' + fmt(r.t) + "</td>" +
+          (comSplit ? '<td class="sec" data-l="Split /500m">' + r.sp + "</td>" + '<td class="sec num" data-l="Watts">' + r.w + "</td>" : "") +
+          '<td class="sec num" data-l="Idade">' + r.a.i + "</td>" +
+          '<td class="sec" data-l="Categoria"><span class="catl">' + faixaDe(r.a).letra + "</span></td>" +
+          '<td class="sec" data-l="Data">' + dataCurta(r.d) + "</td>" +
+          '<td class="uni" data-l="Unidade">' + selo(r.a.u) + "</td>" +
+          '<td class="num dif" data-l="Dif. do líder"><span class="delta">' + (pos === 1 ? "líder" : "+" + (r.t - lider).toFixed(1) + "s") + "</span></td></tr>"
+        ).join("") + "</tbody></table>";
+    }
+    const falta = q ? 0 : lista.length - vis.length;
+    if (falta > 0) {
+      pe.innerHTML = '<button type="button" class="btn btn--ghost" data-mais="' + PASSO + '">' + ic("plus") + "Ver mais " + Math.min(PASSO, falta) + "</button>" +
+        (falta > PASSO ? '<button type="button" class="btn btn--ghost" data-mais="tudo">Ver todos os ' + lista.length + "</button>" : "");
+    } else if (!q && lista.length > PASSO) {
+      pe.innerHTML = '<button type="button" class="btn btn--ghost" data-mais="menos">Mostrar menos</button>';
+    }
+  }
+
+  let evoDist = 500;
   function renderLateral() {
-    const fx = FMAP[F.faixa];
-    const recs = [500, 1000].map((dist) => ({ dist, r: classificar({ s: F.s, faixa: F.faixa, dist })[0] }));
-    const evo = evolucao30();
+    const recs = DISTS.map((dist) => ({ dist, r: classificar({ s: F.s, faixa: F.faixa, dist })[0] }));
+    const evo = evolucao30(evoDist);
     $("#rk-side").innerHTML =
-      '<section class="card spot"><h3>Recordes da casa</h3><p class="card__hint">' + esc(rotuloCategoria(F.s, F.faixa).join(" · ")) + " · toque para ver a distância</p>" +
+      '<section class="card spot"><h3>Recordes da casa</h3><p class="card__hint">' + esc(rotuloCategoria(F.s, F.faixa).join(" · ")) + " · toque para ver a categoria</p>" +
       '<div class="reclist">' + recs.map((x) =>
         '<button type="button" class="rec" data-dist="' + x.dist + '" aria-pressed="' + (x.dist === F.dist) + '">' +
         '<span class="rec__d">' + distLbl(x.dist) + "</span>" +
         '<span class="rec__who">' + (x.r ? "<b>" + esc(x.r.a.n) + "</b><span>" + UMAP[x.r.a.u].sigla + " · " + dataCurta(x.r.d) + "</span>" : "<b>—</b><span>sem tempo ainda</span>") + "</span>" +
         '<span class="rec__t">' + (x.r ? fmt(x.r.t) : "—") + "</span></button>").join("") + "</div></section>" +
-      '<section class="card spot"><h3>Quem mais evoluiu</h3><p class="card__hint">500m · últimos 30 dias contra o melhor anterior</p>' +
+      '<section class="card spot"><h3>Quem mais evoluiu</h3>' +
+      '<div class="seg seg--evo" id="evo-dist" role="group" aria-label="Categoria da evolução">' +
+      DISTS.map((d) => '<button type="button" data-evo="' + d + '" aria-pressed="' + (d === evoDist) + '">' + distLbl(d) + "</button>").join("") + "</div>" +
+      '<p class="card__hint">' + distLbl(evoDist) + " · últimos 30 dias contra o melhor anterior</p>" +
       (evo.length ? '<ol class="evo">' + evo.map((x, i) =>
         '<li><span class="evo__n">' + (i + 1) + '</span><span class="avatar" style="--u:' + UMAP[x.a.u].cor + '">' + iniciais(x.a.n) + "</span>" +
         '<span class="evo__who">' + linkAtleta(x.a) + "<span>" + UMAP[x.a.u].sigla + " · agora " + fmt(x.t) + "</span></span>" +
-        '<span class="evo__d">−' + x.d.toFixed(1) + "s</span></li>").join("") + "</ol>" : '<p class="card__hint">Ninguém melhorou nos últimos 30 dias.</p>') +
-      "</section>" +
-      '<div class="cta-card"><b>Tempo novo?</b><p>O professor lança pelo tablet e o ranking atualiza na hora.</p><a class="btn btn--sm" href="#/professor">Área do professor ' + ic("arrow") + "</a></div>";
+        '<span class="evo__d">−' + x.d.toFixed(1) + "s</span></li>").join("") + "</ol>" : '<p class="card__hint">Ninguém melhorou no ' + distLbl(evoDist) + " nos últimos 30 dias.</p>") +
+      "</section>";
   }
 
   function ligarRanking() {
     ["f-sexo", "f-faixa", "f-dist", "f-uni"].forEach((id) => $("#" + id).addEventListener("change", renderRanking));
     $("#go").addEventListener("click", () => { renderRanking(); $(".ctx").scrollIntoView({ behavior: REDUZ ? "auto" : "smooth", block: "start" }); });
-    $("#periodo").addEventListener("click", function (ev) {
-      const b = ev.target.closest("button[data-p]");
-      if (!b) return;
-      F.periodo = b.dataset.p;
-      $$("button[data-p]", this).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      renderRanking();
-    });
     $("#lanes").addEventListener("click", (ev) => {
       if (ev.target.closest("a")) return;
       const lane = ev.target.closest(".lane");
       if (lane) location.hash = "#/progresso/" + lane.dataset.atleta;
     });
     $("#rk-side").addEventListener("click", (ev) => {
+      const e = ev.target.closest("[data-evo]");
+      if (e) { evoDist = +e.dataset.evo; renderLateral(); return; }
       const b = ev.target.closest(".rec[data-dist]");
       if (!b) return;
       $("#f-dist").value = b.dataset.dist; renderRanking();
+    });
+    $("#rk-busca").addEventListener("input", (ev) => { rkBusca = ev.target.value; renderTabela(); });
+    $("#rk-foot").addEventListener("click", (ev) => {
+      const b = ev.target.closest("[data-mais]");
+      if (!b) return;
+      const v = b.dataset.mais;
+      if (v === "menos") {
+        rkMostra = PASSO;
+        $("#rk-todos").scrollIntoView({ behavior: REDUZ ? "auto" : "smooth", block: "start" });
+      } else rkMostra = v === "tudo" ? rkAtual.lista.length : rkMostra + PASSO;
+      renderTabela();
     });
   }
 
   /* ============================================================ MEU PROGRESSO */
   function perfil(a) {
     const ts = testes().filter((t) => t.a === a.id).sort((x, y) => x.d - y.d);
-    const P = { a, ts, n: ts.length, prs: 0, prIds: {}, best: {}, porDist: { 500: [], 1000: [], 2000: [] }, fx: faixaDe(a), lider: [], rk: {} };
+    const P = { a, ts, n: ts.length, prs: 0, prIds: {}, best: {}, porDist: { 500: [], 1000: [], [BT]: [] }, fx: faixaDe(a), lider: [], rk: {} };
     ts.forEach((t) => {
       const mb = P.best[t.dist];
       if (mb != null && t.t < mb) { P.prs++; P.prIds[t.id] = 1; }
@@ -581,7 +628,7 @@
     });
     P.dists = Object.keys(P.best).length;
     P.meses = new Set(ts.map((t) => t.d.getFullYear() + "-" + t.d.getMonth())).size;
-    [500, 1000, 2000].forEach((dist) => {
+    DISTS.forEach((dist) => {
       const rk = classificar({ s: a.s, faixa: P.fx.id, dist });
       const i = rk.findIndex((r) => r.a.id === a.id);
       P.rk[dist] = { rk, i };
@@ -604,19 +651,19 @@
   function conquistas(P) {
     const M = P.a.s === "M";
     const sub = M ? 100 : 115, subL = M ? "1:40" : "1:55";
-    const dois = M ? 420 : 480, doisL = M ? "7:00" : "8:00";
-    const b5 = P.best[500], b2 = P.best[2000];
+    const mil = M ? 210 : 240, milL = M ? "3:30" : "4:00";
+    const b5 = P.best[500], b1 = P.best[1000];
     const cl = (v) => Math.max(0, Math.min(1, v));
     return [
       { nome: "Primeira remada", desc: "Primeiro teste validado", ico: "star", ok: P.n >= 1, prog: cl(P.n), st: P.n ? P.n + " testes no total" : "0/1" },
       { nome: "Superação", desc: "Bater o próprio recorde", ico: "trend", ok: P.prs >= 1, prog: cl(P.prs), st: P.prs + " recorde" + (P.prs === 1 ? "" : "s") + " pessoa" + (P.prs === 1 ? "l" : "is") },
-      { nome: "Três distâncias", desc: "500, 1.000 e 2.000m testados", ico: "layers", ok: P.dists === 3, prog: P.dists / 3, st: P.dists + "/3 distâncias" },
+      { nome: "Três categorias", desc: "500m, 1.000m e best time testados", ico: "layers", ok: P.dists === 3, prog: P.dists / 3, st: P.dists + "/3 categorias" },
       { nome: "Constância", desc: "Testes em 6 meses diferentes", ico: "calendar", ok: P.meses >= 6, prog: cl(P.meses / 6), st: Math.min(P.meses, 6) + "/6 meses" },
       { nome: "Top 5 da faixa", desc: "Entre os 5 melhores no 500m", ico: "medal", ok: !!P.pos && P.pos <= 5, prog: P.pos ? cl(5 / P.pos) : 0, st: P.pos ? "Hoje: " + P.pos + "º de " + P.total : "Sem 500m" },
       { nome: "Pódio", desc: "Top 3 da faixa no 500m", ico: "podium", ok: !!P.pos && P.pos <= 3, prog: P.pos ? cl(3 / P.pos) : 0, st: P.pos ? "Hoje: " + P.pos + "º" : "Sem 500m", gold: true },
-      { nome: "Recordista da casa", desc: "1º da faixa em alguma distância", ico: "crown", ok: P.lider.length > 0, prog: P.lider.length ? 1 : 0, st: P.lider.length ? "Recorde no " + P.lider.map(distLbl).join(", ") : "Ainda não", gold: true },
+      { nome: "Recordista da casa", desc: "1º da faixa em alguma categoria", ico: "crown", ok: P.lider.length > 0, prog: P.lider.length ? 1 : 0, st: P.lider.length ? "Recorde no " + P.lider.map(distLbl).join(", ") : "Ainda não", gold: true },
       { nome: "Sub-" + subL, desc: "500m abaixo de " + subL, ico: "bolt", ok: b5 != null && b5 < sub, prog: b5 ? cl(sub / b5) : 0, st: b5 == null ? "Sem 500m" : b5 < sub ? "Melhor: " + fmt(b5) : "Faltam " + r1(b5 - sub + 0.1).toFixed(1) + "s" },
-      { nome: "Motor de 2.000m", desc: "2.000m abaixo de " + doisL, ico: "gauge", ok: b2 != null && b2 < dois, prog: b2 ? cl(dois / b2) : 0, st: b2 == null ? "Sem 2.000m" : b2 < dois ? "Melhor: " + fmt(b2) : "Faltam " + r1(b2 - dois + 0.1).toFixed(1) + "s" },
+      { nome: "Motor de 1.000m", desc: "1.000m abaixo de " + milL, ico: "gauge", ok: b1 != null && b1 < mil, prog: b1 ? cl(mil / b1) : 0, st: b1 == null ? "Sem 1.000m" : b1 < mil ? "Melhor: " + fmt(b1) : "Faltam " + r1(b1 - mil + 0.1).toFixed(1) + "s" },
       { nome: "Evolução relâmpago", desc: "−5s no 500m em 12 meses", ico: "flame", ok: P.evo >= 5, prog: cl(P.evo / 5), st: "−" + P.evo.toFixed(1) + "s de 5s" },
     ];
   }
@@ -668,9 +715,9 @@
 
     /* gráfico + alvo + posições */
     html += '<div class="pgrid"><section class="card spot rise" style="--d:1">' +
-      '<div class="card__head"><div><h3>Evolução</h3><p class="card__hint">Mais alto = mais rápido · ponto branco = recorde pessoal</p></div>' +
-      '<div class="seg" id="pg-dist" role="group" aria-label="Distância do gráfico">' +
-      [500, 1000, 2000].map((d) => '<button type="button" data-d="' + d + '" aria-pressed="' + (d === pgDist) + '"' + (P.porDist[d].length ? "" : " disabled") + ">" + distLbl(d) + "</button>").join("") +
+      '<div class="card__head"><div><h3>Evolução</h3><p class="card__hint">A linha sobe quando o tempo cai · ponto branco = recorde pessoal</p></div>' +
+      '<div class="seg" id="pg-dist" role="group" aria-label="Categoria do gráfico">' +
+      DISTS.map((d) => '<button type="button" data-d="' + d + '" aria-pressed="' + (d === pgDist) + '"' + (P.porDist[d].length ? "" : " disabled") + ">" + distLbl(d) + "</button>").join("") +
       '</div></div><div class="chart" id="pg-chart" style="--u:' + u.cor + '"></div>' +
       '<div class="chart__legend"><span><i style="background:' + u.cor + '"></i>Teste validado</span><span><i style="background:var(--brass)"></i>Recorde pessoal</span></div></section><div>';
 
@@ -690,13 +737,13 @@
     /* histórico */
     const hist = P.ts.slice().reverse();
     html += '<section class="card rise" style="--d:4"><div class="card__head"><div><h3>Histórico de testes</h3><p class="card__hint">' + P.n + " testes · todos validados por professor</p></div></div>" +
-      '<div class="tablewrap tablewrap--flat" style="box-shadow:none"><table class="hist" id="pg-hist"><thead><tr><th>Data</th><th>Distância</th><th>Tempo</th><th>Split /500m</th><th class="num">Watts</th><th>Marca</th><th>Validado por</th></tr></thead><tbody>' +
+      '<div class="tablewrap tablewrap--flat" style="box-shadow:none"><table class="hist" id="pg-hist"><thead><tr><th>Data</th><th>Categoria</th><th>Tempo</th><th>Split /500m</th><th class="num">Watts</th><th>Marca</th><th>Validado por</th></tr></thead><tbody>' +
       hist.map((t, k) => '<tr class="' + (k >= 5 ? "xtra" : "") + '" style="--u:' + u.cor + ";--i:" + Math.min(k, 12) + '">' +
         '<td class="pos" data-l="Data">' + dataCurta(t.d) + "</td>" +
-        '<td class="nome" data-l="Distância">' + distLbl(t.dist) + "</td>" +
+        '<td class="nome" data-l="Categoria">' + distLbl(t.dist) + "</td>" +
         '<td class="t" data-l="Tempo">' + fmt(t.t) + "</td>" +
-        '<td class="sec" data-l="Split /500m">' + split(t.t, t.dist) + "</td>" +
-        '<td class="sec num" data-l="Watts">' + watts(t.t, t.dist) + "</td>" +
+        '<td class="sec" data-l="Split /500m">' + (split(t.t, t.dist) || "—") + "</td>" +
+        '<td class="sec num" data-l="Watts">' + (watts(t.t, t.dist) || "—") + "</td>" +
         '<td class="marca" data-l="Marca">' + (P.prIds[t.id] ? '<span class="tag tag--pr">Recorde pessoal</span>' : t.t === P.best[t.dist] ? '<span class="tag tag--pr">Melhor marca</span>' : '<span class="tag tag--muted">—</span>') + "</td>" +
         '<td class="sec" data-l="Validado por">' + esc(curto(t.prof || "")) + "</td></tr>").join("") +
       "</tbody></table></div>" +
@@ -739,8 +786,8 @@
   }
 
   function posicoesCard(P) {
-    return '<section class="card spot rise" style="--d:3"><h3>Posição por distância</h3><p class="card__hint">' + P.fx.label + ' · toque para abrir no ranking</p><div class="poslist">' +
-      [500, 1000, 2000].map((dist) => {
+    return '<section class="card spot rise" style="--d:3"><h3>Posição por categoria</h3><p class="card__hint">' + P.fx.label + ' · toque para abrir no ranking</p><div class="poslist">' +
+      DISTS.map((dist) => {
         const R = P.rk[dist];
         if (R.i < 0) return '<button type="button" class="posrow" disabled><span class="posrow__d">' + distLbl(dist) + '</span><span class="posrow__p">—<small>sem teste</small></span><span class="posrow__t">—</span></button>';
         return '<button type="button" class="posrow' + (R.i === 0 ? " posrow--lead" : "") + '" data-rank="' + P.a.s + "|" + P.fx.id + "|" + dist + '">' +
@@ -754,11 +801,11 @@
     if (!box) return;
     const lista = P.porDist[pgDist];
     if (lista.length < 2) {
-      box.innerHTML = '<p class="chart__msg">' + (lista.length ? "Só um teste de " + distLbl(pgDist) + " até agora (" + fmt(lista[0].t) + "). O gráfico aparece a partir do segundo." : "Sem testes nessa distância.") + "</p>";
+      box.innerHTML = '<p class="chart__msg">' + (lista.length ? "Só um teste de " + distLbl(pgDist) + " até agora (" + fmt(lista[0].t) + "). O gráfico aparece a partir do segundo." : "Sem testes nessa categoria.") + "</p>";
       return;
     }
     // desenha na largura real do cartão: no celular os rótulos não encolhem
-    const W = Math.max(280, Math.round(box.clientWidth || 640)), H = W < 520 ? 220 : Math.round(W * 0.45), pl = 50, pr = 18, pt = 18, pb = 30;
+    const W = Math.max(280, Math.round(box.clientWidth || 640)), H = W < 520 ? 220 : Math.round(W * 0.45), pl = 50, pr = 18, pt = 28, pb = 30;
     const ts = lista.map((t) => t.t), tmin = Math.min.apply(null, ts), tmax = Math.max.apply(null, ts);
     const pad = Math.max(0.6, (tmax - tmin) * 0.18), lo = tmin - pad, hi = tmax + pad;
     const x0 = lista[0].d.getTime(), x1 = Math.max(lista[lista.length - 1].d.getTime(), x0 + DIA);
@@ -770,6 +817,7 @@
       g += '<line class="gl" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>' +
         '<text class="lab" x="' + (pl - 8) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(v) + "</text>";
     }
+    g += '<text class="lab lab--up" x="' + (pl - 8) + '" y="' + (pt - 10) + '" text-anchor="end">▲ mais rápido</text>';
     let ultimoMes = "";
     lista.forEach((t) => {
       const m = MESES[t.d.getMonth()] + (t.d.getMonth() === 0 ? "/" + String(t.d.getFullYear()).slice(-2) : "");
@@ -806,7 +854,7 @@
       const t = lista[k];
       circles.forEach((c, i) => c.setAttribute("r", i === k ? "7" : "4.5"));
       guide.setAttribute("x1", pts[k][0]); guide.setAttribute("x2", pts[k][0]); guide.classList.add("is-on");
-      tip.innerHTML = "<b>" + fmt(t.t) + (P.prIds[t.id] ? '<span class="tag tag--rec">PR</span>' : "") + "</b><span>" + dataCurta(t.d) + " · " + split(t.t, t.dist) + "/500m · " + watts(t.t, t.dist) + " W</span>";
+      tip.innerHTML = "<b>" + fmt(t.t) + (P.prIds[t.id] ? '<span class="tag tag--rec">PR</span>' : "") + "</b><span>" + dataCurta(t.d) + (t.dist === BT ? "" : " · " + split(t.t, t.dist) + "/500m · " + watts(t.t, t.dist) + " W") + "</span>";
       tip.style.left = svg.offsetLeft + pts[k][0] * esc_ + "px"; tip.style.top = svg.offsetTop + pts[k][1] * esc_ + "px";
       tip.classList.add("is-on");
     }
@@ -833,6 +881,7 @@
   }
 
   /* ============================================================ ÁREA DO PROFESSOR */
+  const exemplo = (d) => (d === 500 ? "1:42.5" : d === 1000 ? "3:35.0" : "1:35.0");
   let sessao = null, profSel = 1, pin = "", lDist = 500, sessaoDesde = null;
   try { const s = sessionStorage.getItem("srg-prof"); if (s != null) { sessao = +s; sessaoDesde = new Date(); } } catch (e) {}
 
@@ -903,10 +952,10 @@
       UNIDADES.slice().sort((x, y) => (x === u ? -1 : y === u ? 1 : 0)).map((un) => '<optgroup label="' + esc(un.nome) + '">' +
         ATLETAS.filter((a) => a.u === un.nome).map((a) => '<option value="' + a.id + '">' + esc(a.n) + " · " + a.i + " anos</option>").join("") + "</optgroup>").join("") +
       "</select></div>" +
-      '<div class="field"><span class="eyebrow">Distância</span><div class="seg seg--lg" id="l-dist" role="group" aria-label="Distância">' +
-      [500, 1000, 2000].map((d) => '<button type="button" data-d="' + d + '" aria-pressed="' + (d === lDist) + '">' + distLbl(d) + "</button>").join("") + "</div></div>" +
+      '<div class="field"><span class="eyebrow">Categoria</span><div class="seg seg--lg" id="l-dist" role="group" aria-label="Categoria">' +
+      DISTS.map((d) => '<button type="button" data-d="' + d + '" aria-pressed="' + (d === lDist) + '">' + distLbl(d) + "</button>").join("") + "</div></div>" +
       '<div class="field"><label class="eyebrow" for="l-tempo">Tempo final</label><div class="timebox">' +
-      '<input class="input input--time" id="l-tempo" inputmode="decimal" placeholder="' + (lDist === 500 ? "1:42.5" : lDist === 1000 ? "3:35.0" : "7:20.0") + '" aria-describedby="l-hint">' +
+      '<input class="input input--time" id="l-tempo" inputmode="decimal" placeholder="' + exemplo(lDist) + '" aria-describedby="l-hint">' +
       '<div class="timebox__aux"><span>Split <b id="l-split">—</b></span><span>Watts <b id="l-watts">—</b></span></div></div>' +
       '<p class="hint" id="l-hint">Formato m:ss.d — do jeito que aparece no monitor do ergômetro.</p></div>' +
       '<div class="preview" id="l-prev">Escolha o atleta e digite o tempo para ver onde ele entra.</div>' +
@@ -970,15 +1019,15 @@
     const prev = $("#l-prev"), go = $("#l-go"), inp = $("#l-tempo");
     if (!prev) return;
     const id = $("#l-atleta").value, raw = inp.value.trim(), t = parseTempo(raw);
-    const lim = { 500: [70, 240], 1000: [150, 480], 2000: [330, 900] }[lDist];
+    const lim = { 500: [70, 240], 1000: [150, 480], [BT]: [40, 600] }[lDist];
     const ok = t != null && t >= lim[0] && t <= lim[1];
     inp.classList.toggle("is-bad", !!raw && !ok);
-    $("#l-split").textContent = ok ? split(t, lDist) : "—";
-    $("#l-watts").textContent = ok ? watts(t, lDist) + " W" : "—";
+    $("#l-split").textContent = ok && lDist !== BT ? split(t, lDist) : "—";
+    $("#l-watts").textContent = ok && lDist !== BT ? watts(t, lDist) + " W" : "—";
     go.disabled = true;
     prev.className = "preview";
     if (!raw) { prev.textContent = "Escolha o atleta e digite o tempo para ver onde ele entra."; return; }
-    if (!ok) { prev.className = "preview preview--bad"; prev.textContent = "Tempo fora do padrão para " + distLbl(lDist) + ". Exemplo: " + (lDist === 500 ? "1:42.5" : lDist === 1000 ? "3:35.0" : "7:20.0") + "."; return; }
+    if (!ok) { prev.className = "preview preview--bad"; prev.textContent = "Tempo fora do padrão para " + distLbl(lDist) + ". Exemplo: " + exemplo(lDist) + "."; return; }
     if (!id) { prev.textContent = "Agora escolha o atleta para simular a posição."; return; }
     const ev = avaliar(id, lDist, t);
     go.disabled = false;
@@ -988,7 +1037,7 @@
       (ev.recorde ? '<div class="prev__rec">' + ic("trophy") + "<div>Novo recorde da casa<small>" + (ev.destronado ? "Destrona " + esc(ev.destronado.a.n) + " (" + fmt(ev.destronado.t) + ")" : "Primeiro tempo da categoria") + "</small></div></div>" : "") +
       '<div class="prev__pos"><b>' + ev.pos + "º</b><span>de " + ev.total + " · " + cat + "</span></div>" +
       '<div class="prev__tags">' +
-      (ev.primeira ? '<span class="tag tag--pr">Primeiro tempo nessa distância</span>' :
+      (ev.primeira ? '<span class="tag tag--pr">Primeiro tempo nessa categoria</span>' :
         ev.pr ? '<span class="tag tag--pr">Recorde pessoal −' + (ev.pb - t).toFixed(1) + "s</span>" :
           '<span class="tag tag--muted">Recorde pessoal segue ' + fmt(ev.pb) + "</span>") + "</div>";
   }
@@ -997,12 +1046,12 @@
     const link = rankLink(ev.a.s, ev.fx.id, ev.dist, "Ver no ranking →");
     if (ev.recorde) {
       confete();
-      toast("<b>Recorde da casa caiu!</b> " + esc(nome) + " fez <b>" + fmt(ev.t) + "</b> nos " + distLbl(ev.dist) + " (" + ev.fx.label + ")." +
+      toast("<b>Recorde da casa caiu!</b> " + esc(nome) + " fez <b>" + fmt(ev.t) + "</b> no " + distLbl(ev.dist) + " (" + ev.fx.label + ")." +
         (ev.destronado ? " Destronou " + esc(ev.destronado.a.n) + " (" + fmt(ev.destronado.t) + ")." : "") + "<br>" + link, "rec");
     } else if (ev.pr) {
-      toast("<b>Recorde pessoal!</b> " + esc(nome) + ": " + fmt(ev.t) + " nos " + distLbl(ev.dist) + " (−" + (ev.pb - ev.t).toFixed(1) + "s). Agora " + ev.pos + "º na faixa.<br>" + link, "pr");
+      toast("<b>Recorde pessoal!</b> " + esc(nome) + ": " + fmt(ev.t) + " no " + distLbl(ev.dist) + " (−" + (ev.pb - ev.t).toFixed(1) + "s). Agora " + ev.pos + "º na faixa.<br>" + link, "pr");
     } else {
-      toast("<b>Tempo validado.</b> " + esc(nome) + " · " + fmt(ev.t) + " nos " + distLbl(ev.dist) + " — " + ev.pos + "º na faixa.<br>" + link);
+      toast("<b>Tempo validado.</b> " + esc(nome) + " · " + fmt(ev.t) + " no " + distLbl(ev.dist) + " — " + ev.pos + "º na faixa.<br>" + link);
     }
   }
 
@@ -1026,7 +1075,7 @@
 
   function simularTablet() {
     const elegiveis = ATLETAS.filter((a) => a.b != null), a = elegiveis[(Math.random() * elegiveis.length) | 0];
-    const dist = [500, 500, 1000, 2000][(Math.random() * 4) | 0];
+    const dist = [500, 500, 1000, BT][(Math.random() * 4) | 0];
     const meus = testes().filter((t) => t.a === a.id && t.dist === dist).map((t) => t.t);
     const pb = meus.length ? Math.min.apply(null, meus) : base(a.b, dist);
     state.n = (state.n || 0) + 1;
@@ -1077,7 +1126,7 @@
       if (db) {
         lDist = +db.dataset.d;
         $$("#l-dist button").forEach((x) => x.setAttribute("aria-pressed", String(x === db)));
-        $("#l-tempo").placeholder = lDist === 500 ? "1:42.5" : lDist === 1000 ? "3:35.0" : "7:20.0";
+        $("#l-tempo").placeholder = exemplo(lDist);
         atualizarPreview();
       }
     });
@@ -1116,12 +1165,11 @@
   function renderTV() {
     lerFiltros();
     if (!tvCat) tvCat = { s: F.s, faixa: F.faixa, dist: F.dist };
-    const fx = FMAP[tvCat.faixa], per = PERIODOS[F.periodo];
-    const categoria = classificar({ s: tvCat.s, faixa: tvCat.faixa, dist: tvCat.dist, periodo: F.periodo });
+    const categoria = classificar({ s: tvCat.s, faixa: tvCat.faixa, dist: tvCat.dist });
     const lista = (F.uni === "__all" ? categoria : categoria.filter((r) => r.a.u === F.uni)).slice(0, TOP);
     // ao lado do GAME, a categoria do jeito do ranking oficial
     const cs = categoriasTV(), pos = cs.findIndex((c) => c.s === tvCat.s && c.faixa === tvCat.faixa && c.dist === tvCat.dist);
-    $("#tv-per").textContent = per.rot + (tvTimer && pos >= 0 ? " · " + (pos + 1) + " de " + cs.length : "");
+    $("#tv-per").textContent = "Classificação geral" + (tvTimer && pos >= 0 ? " · " + (pos + 1) + " de " + cs.length : "");
     $("#tv-cat").innerHTML = rotuloCategoria(tvCat.s, tvCat.faixa, tvCat.dist, F.uni)
       .map((p) => '<span class="nw">' + esc(p) + "</span>").join(" · ");
     // barrinha que enche até a próxima troca (recomeça a cada categoria)
@@ -1146,16 +1194,16 @@
     palco.style.zoom = Math.max(0.5, z).toFixed(3);
   }
 
-  // ordem pedida pelo cliente: masculino 500m subindo a idade, depois 1.000m; feminino igual;
-  // por fim o geral (todos juntos, sem filtro) em cada distância. Só entra categoria que tem alguém.
+  // ordem pedida pelo cliente: masculino 500m subindo a idade, depois 1.000m e best time; feminino igual;
+  // por fim o geral (todos juntos, sem filtro) em cada categoria. Só entra categoria que tem alguém.
   function categoriasTV() {
     const out = [];
-    const tem = (c) => classificar({ s: c.s, faixa: c.faixa, dist: c.dist, periodo: F.periodo }).some((r) => F.uni === "__all" || r.a.u === F.uni);
-    ["M", "F"].forEach((s) => [500, 1000].forEach((dist) => FAIXAS.forEach((f) => {
+    const tem = (c) => classificar({ s: c.s, faixa: c.faixa, dist: c.dist }).some((r) => F.uni === "__all" || r.a.u === F.uni);
+    ["M", "F"].forEach((s) => DISTS.forEach((dist) => FAIXAS.forEach((f) => {
       const c = { s, faixa: f.id, dist };
       if (tem(c)) out.push(c);
     })));
-    [500, 1000].forEach((dist) => { const c = { s: "T", faixa: "todas", dist }; if (tem(c)) out.push(c); });
+    DISTS.forEach((dist) => { const c = { s: "T", faixa: "todas", dist }; if (tem(c)) out.push(c); });
     return out;
   }
   function proximaCategoriaTV() {
@@ -1266,7 +1314,7 @@
       if (!el) return;
       e.preventDefault();
       const [s, faixa, dist] = el.dataset.rank.split("|");
-      aplicarFiltros({ s, faixa, dist: +dist, uni: "__all", periodo: "geral" });
+      aplicarFiltros({ s, faixa, dist: +dist, uni: "__all" });
       if (rotaAtual === "ranking") { renderRanking(); window.scrollTo({ top: 0, behavior: "smooth" }); }
       else location.hash = "#/ranking";
     });

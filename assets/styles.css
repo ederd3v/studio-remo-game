@@ -181,6 +181,9 @@ main:focus{outline:none}
 .phead h1 em,.hero h1 em{font-style:normal;color:var(--accent)}
 .phead > p:last-child{color:var(--ink-2);max-width:62ch;font-size:var(--step-1)}
 .phead--row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+/* meu progresso: o título é só o GAME da marca */
+.pg-titulo{line-height:0}
+.pg-game{display:block;height:clamp(64px,9vw,104px);width:auto;overflow:visible}
 .picker{display:flex;flex-direction:column;gap:7px;min-width:260px}
 
 /* ============================================================ HERO + CONSOLE */
@@ -252,11 +255,6 @@ main:focus{outline:none}
 .ctx h2{font-size:var(--step-2);font-weight:800;font-stretch:110%;text-transform:uppercase;letter-spacing:-.01em;margin-right:auto}
 .ctx h2 small{display:block;font-size:.6875rem;letter-spacing:.18em;color:var(--muted);
   font-family:"IBM Plex Mono",monospace;font-weight:400;margin-bottom:6px;text-transform:uppercase}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:100px;
-  border:1px solid var(--line);background:var(--surface);font-size:.75rem;color:var(--ink-2);white-space:nowrap}
-.chip--rec{border-color:var(--brass);background:var(--brass-wash);color:var(--brass);font-weight:600}
-.chip b{font-family:"IBM Plex Mono",monospace;color:var(--ink);font-variant-numeric:tabular-nums}
-.chip--rec b{color:var(--brass)}
 
 .seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:3px;gap:2px}
 .seg button{
@@ -380,7 +378,7 @@ main:focus{outline:none}
 
 /* ============================================================ TABELA */
 .tablewrap{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);
-  overflow-x:auto;box-shadow:var(--shadow)}
+  overflow-x:auto;overflow-y:hidden;box-shadow:var(--shadow)}
 table{width:100%;border-collapse:collapse;min-width:680px}
 thead th{
   text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);
@@ -443,12 +441,41 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
 @media(max-width:640px){.histmore{display:flex}}
 
 /* ============================================================ LAYOUT + CARDS */
-.split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:26px;align-items:start;margin-top:26px}
+.rk{
+  display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-areas:"lanes side" "todos todos";
+  gap:26px;align-items:start;margin-top:26px;
+}
+.rk > .lanes{grid-area:lanes;margin-bottom:0}
+.rk > .side{grid-area:side}
+.rk > .rk-todos{grid-area:todos}
+.rk > .lanes:empty{display:none}
+@media(max-width:980px){.rk{grid-template-columns:1fr;grid-template-areas:"lanes" "todos" "side"}}
 /* itens de grid não podem crescer pelo conteúdo (a tabela tem largura mínima e rola por dentro) */
-.split > *,.pgrid > *,.dgrid > *,.fronts > *{min-width:0}
-@media(max-width:980px){.split{grid-template-columns:1fr}}
-.side{display:flex;flex-direction:column;gap:18px;position:sticky;top:84px}
-@media(max-width:980px){.side{position:static}}
+.rk > *,.pgrid > *,.dgrid > *,.fronts > *{min-width:0}
+.side{display:flex;flex-direction:column;gap:18px}
+
+/* todos os atletas: título, lupa e a tabela que abre de 10 em 10 */
+.rk-todos__head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px 20px;flex-wrap:wrap;margin-bottom:14px}
+.rk-todos__head h3{font-family:var(--display);font-size:1.625rem;letter-spacing:.04em;text-transform:uppercase;line-height:1;margin-bottom:6px}
+.rk-todos__head .card__hint{margin:0}
+.busca{
+  display:flex;align-items:center;gap:9px;height:44px;padding:0 14px;width:min(340px,100%);
+  border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--muted);cursor:text;
+  transition:border-color .2s,box-shadow .2s,color .2s;
+}
+.busca:focus-within{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 3px var(--accent-wash),0 0 22px -10px var(--accent)}
+.busca svg{width:18px;height:18px;flex:none}
+.busca input{flex:1;min-width:0;height:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:.9375rem;outline:none}
+.busca input::placeholder{color:var(--muted)}
+.busca input::-webkit-search-cancel-button{filter:hue-rotate(90deg)}
+.rk-todos__foot{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.rk-todos__foot:empty{display:none}
+tbody tr.top td.pos{color:var(--ink);font-weight:700}
+/* a letra da categoria de idade */
+.catl{
+  display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:6px;
+  border:1px solid var(--line);color:var(--accent);font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:.75rem;
+}
 .card{
   position:relative;border:1px solid var(--line);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);
   background:radial-gradient(520px circle at var(--mx,-600px) var(--my,-600px), var(--spot), transparent 55%), var(--surface);
@@ -489,13 +516,13 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
 /* lateral do ranking */
 .reclist{display:flex;flex-direction:column;gap:8px}
 .rec{
-  display:grid;grid-template-columns:62px 1fr auto;align-items:center;gap:12px;width:100%;text-align:left;
+  display:grid;grid-template-columns:76px 1fr auto;align-items:center;gap:12px;width:100%;text-align:left;
   padding:11px 12px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line-soft);
   color:inherit;cursor:pointer;transition:border-color .2s,transform .25s var(--ease);
 }
 .rec:hover{border-color:color-mix(in srgb, var(--brass) 50%, var(--line));transform:translateX(3px)}
 .rec[aria-pressed="true"]{border-color:var(--brass);background:linear-gradient(100deg,var(--brass-wash),var(--surface-2) 70%)}
-.rec__d{font-family:"IBM Plex Mono",monospace;font-size:.6875rem;color:var(--muted);letter-spacing:.08em}
+.rec__d{font-family:"IBM Plex Mono",monospace;font-size:.6875rem;color:var(--muted);letter-spacing:.06em;white-space:nowrap}
 .rec__who{min-width:0}
 .rec__who b{display:block;font-size:.8125rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rec__who span{font-size:.6875rem;color:var(--muted)}
@@ -509,12 +536,6 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
 .evo__who a{display:block;font-size:.8125rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .evo__who span{font-size:.6875rem;color:var(--muted);font-family:"IBM Plex Mono",monospace}
 .evo__d{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--accent);font-size:.875rem}
-.cta-card{
-  border:1px dashed color-mix(in srgb, var(--accent) 40%, var(--line));border-radius:var(--r-lg);padding:18px;
-  background:linear-gradient(135deg,var(--accent-wash),transparent 70%);
-}
-.cta-card b{display:block;font-family:var(--display);font-size:1rem;margin-bottom:4px}
-.cta-card p{font-size:.8125rem;color:var(--ink-2);margin-bottom:14px}
 
 /* ============================================================ MEU PROGRESSO */
 .profile{
@@ -611,6 +632,9 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
 .chart svg{width:100%;height:auto;display:block;overflow:visible;touch-action:pan-y}
 .chart .gl{stroke:var(--line-soft);stroke-width:1}
 .chart .lab{fill:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:10px}
+.chart .lab--up{fill:var(--accent)}
+.seg--evo{display:flex;width:100%;margin:6px 0 10px}
+.seg--evo button{flex:1}
 .chart .line{fill:none;stroke:var(--u);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
 .chart .area{opacity:0;transition:opacity 1s ease .5s}
 .chart.is-drawn .area{opacity:1}
@@ -663,13 +687,13 @@ td.sec{font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-variant-num
 
 .poslist{display:flex;flex-direction:column;gap:8px}
 .posrow{
-  display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:12px;width:100%;
+  display:grid;grid-template-columns:82px 1fr auto;align-items:center;gap:12px;width:100%;
   padding:11px 12px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line-soft);
   color:inherit;text-align:left;cursor:pointer;transition:border-color .2s,transform .25s var(--ease);
 }
 .posrow:hover{border-color:var(--accent);transform:translateX(3px)}
 .posrow:disabled{cursor:default;opacity:.55;transform:none;border-color:var(--line-soft)}
-.posrow__d{font-family:"IBM Plex Mono",monospace;font-size:.6875rem;color:var(--muted);letter-spacing:.08em}
+.posrow__d{font-family:"IBM Plex Mono",monospace;font-size:.6875rem;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
 .posrow__p{font-family:var(--display);font-weight:900;font-stretch:115%;font-size:1.375rem}
 .posrow__p small{font-family:"IBM Plex Sans",sans-serif;font-weight:400;font-size:.75rem;color:var(--muted);margin-left:5px}
 .posrow__t{font-family:"IBM Plex Mono",monospace;font-weight:600}
@@ -1010,12 +1034,9 @@ body{-webkit-tap-highlight-color:transparent}
   .water{height:44px}
   .ctx{margin:22px 0 14px;gap:8px;padding-bottom:14px}
   .ctx h2{font-size:1.125rem;width:100%;margin:0}
-  .ctx .seg{order:3;width:100%}
-  .ctx .seg button{flex:1;padding-block:7px}
   .lanes{gap:6px}
-  .split{margin-top:16px;gap:16px}
+  .rk{margin-top:16px;gap:16px}
   .side{gap:14px}
-  .side .cta-card{display:none}
   .card{padding:16px;border-radius:14px}
   .card__hint{margin-bottom:12px}
 
@@ -1099,10 +1120,32 @@ body{-webkit-tap-highlight-color:transparent}
 }
 .mf__grp{display:flex;flex-direction:column;gap:9px;min-width:0}
 .mf__lbl{font-family:"IBM Plex Mono",monospace;font-size:.6875rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.mf__grp--uni{grid-column:1 / -1;padding-top:16px;border-top:1px solid var(--line-soft)}
+/* ordem no painel: sexo · categoria · Geral na primeira linha; idades e unidades numa linha cada */
+.mf__grp--cat{order:1}
+.mf__grp--dist{order:2}
+.mf__grp--faixa{order:4;grid-column:1 / -1}
+.mf__grp--uni{order:5;grid-column:1 / -1;padding-top:16px;border-top:1px solid var(--line-soft)}
+/* Geral: um toque mostra todo mundo (homens e mulheres, todas as idades) na unidade escolhida */
+.geral{
+  order:3;align-self:end;min-height:50px;display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
+  padding:6px 14px 6px 6px;border-radius:14px;border:1px solid var(--line);background:var(--ground);color:var(--ink-2);
+  transition:border-color .25s,background .25s,box-shadow .25s,color .25s;
+}
+.geral:hover{border-color:color-mix(in srgb, var(--accent) 45%, var(--line));color:var(--ink)}
+.geral__ico{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;flex:none;border:1px solid var(--line);color:var(--accent)}
+.geral__ico svg{width:20px;height:20px}
+.geral__txt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.geral__txt b{font-family:var(--display);font-size:1.375rem;letter-spacing:.06em;line-height:1;color:var(--ink);font-weight:400}
+.geral__txt small{font-size:.8125rem;color:var(--muted)}
+.geral__chk{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);flex:none;position:relative;transition:background .25s,border-color .25s}
+.geral[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb, var(--accent) 10%, var(--surface));box-shadow:0 0 0 3px var(--accent-wash),0 10px 26px -14px var(--accent)}
+.geral[aria-pressed="true"] .geral__ico{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.geral[aria-pressed="true"] .geral__txt small{color:var(--ink-2)}
+.geral[aria-pressed="true"] .geral__chk{background:var(--accent);border-color:var(--accent)}
+.geral[aria-pressed="true"] .geral__chk::after{content:"";position:absolute;left:7px;top:3px;width:5px;height:10px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:rotate(45deg)}
 @media(max-width:1020px){
   .mf{grid-template-columns:1fr 1fr}
-  .mf__grp--faixa{grid-column:1 / -1}
+  .geral{grid-column:1 / -1}
 }
 .mf__seg{position:relative;isolation:isolate;display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--ground);border:1px solid var(--line)}
 /* a pílula verde é uma só e desliza até o botão escolhido (--idx de --n) */
@@ -1135,6 +1178,11 @@ body{-webkit-tap-highlight-color:transparent}
 .chip-btn:hover:not([aria-pressed="true"]){border-color:color-mix(in srgb, var(--c) 45%, var(--line));color:var(--ink)}
 .chip-btn[style*="--u"]{--c:var(--u)}
 .chip-btn i{width:8px;height:8px;border-radius:50%;background:var(--u);flex:none;transition:box-shadow .3s}
+.chip-cat{
+  display:inline-grid;place-items:center;width:20px;height:20px;margin-left:-6px;border-radius:50%;flex:none;
+  border:1px solid var(--line);color:var(--accent);font-family:"IBM Plex Mono",monospace;font-size:.6875rem;font-weight:700;
+}
+.chip-btn[aria-pressed="true"] .chip-cat{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 /* escolhido: o botão acende na cor dele (verde nas idades, a cor da cidade nas unidades) */
 .chip-btn[aria-pressed="true"]{
   background:color-mix(in srgb, var(--c) 14%, var(--surface));border-color:var(--c);color:var(--ink);font-weight:600;
@@ -1229,17 +1277,14 @@ body{-webkit-tap-highlight-color:transparent}
   .chip-btn{padding:10px 16px;margin-block:4px;font-size:.9375rem;background:var(--surface)}
   .chip-anos{display:inline}
 
-  /* contexto vira uma linha: quantos atletas e o período (o recorde já aparece na lista) */
-  .ctx{margin:18px 0 10px;padding-bottom:0;border-bottom:0;gap:10px;flex-wrap:nowrap;justify-content:space-between}
-  .ctx h2,#chip-rec{display:none}
-  #chip-n{order:1;border:0;background:none;padding:0;font-size:.9375rem;color:var(--muted)}
-  #chip-n b{font-size:.9375rem}
-  .ctx .seg{order:2;width:auto}
-  .ctx .seg button{flex:none;padding:7px 11px;font-size:.8125rem}
+  /* o título da categoria já aparece em "Todos os atletas" */
+  .ctx{display:none}
+  .rk-todos__head{margin-bottom:10px}
+  .rk-todos__head h3{font-size:1.25rem}
+  .busca{width:100%}
 
-  /* sem raias: a lista simples assume */
-  .lanes{margin-bottom:0}
-  .split{margin-top:12px}
+  /* sem pódio: a lista de todos assume */
+  .rk{margin-top:14px}
 
   /* lateral: recordes e evolução, sem as cores de unidade nos avatares */
   .side{margin-top:6px}
@@ -1301,7 +1346,7 @@ h1,h2,h3{letter-spacing:.01em}
 .ring__av{font-size:2.125rem}
 .avatar{font-size:1rem}
 .avatar--lg{font-size:1.25rem}
-.empty b,.cta-card b,.qempty b{font-size:1.375rem;letter-spacing:.03em}
+.empty b,.qempty b{font-size:1.375rem;letter-spacing:.03em}
 .rrow__pos{font-size:1.25rem}
 
 /* tabela do 6º em diante cabe sem rolar: unidade só pela sigla, colunas mais justas */
