@@ -14,8 +14,8 @@ python3 dev/devserver.py
 Comparar versões antigas lado a lado (cada uma numa porta):
 
 ```bash
-git worktree add ../srg-anterior c5da8e1      # antes do preto e verde
-cd ../srg-anterior && python3 ../studio-remo-game/dev/devserver.py 5174
+git worktree add ../srg-anterior c5da8e1                  # antes do preto e verde
+python3 dev/devserver.py 5174 ../srg-anterior             # http://localhost:5174
 ```
 
 Regra: nada vai para o ar (branch `main`, que o GitHub Pages publica) sem o Eder autorizar a versão.
