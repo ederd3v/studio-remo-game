@@ -3,35 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Logo · variações da camuflagem</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Black+Ops+One&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<title>Logo · GAME x referência</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Ferramenta local: compara as variações do GAME camuflado (não faz parte do site). */
-body{margin:0;background:#000;color:#fff;font:14px/1.5 "IBM Plex Mono",monospace;padding:32px 40px 60px}
-h1{font:400 12px "IBM Plex Mono",monospace;letter-spacing:.2em;text-transform:uppercase;color:#86C190;margin:0 0 28px}
-.v{border-top:1px solid rgba(50,217,75,.25);padding:26px 0 30px;display:grid;grid-template-columns:90px 1fr;gap:24px;align-items:center}
-.v > b{font:400 13px "IBM Plex Mono";color:#00FC27;letter-spacing:.12em}
-.v > b small{display:block;color:#86C190;font-size:11px;letter-spacing:0;margin-top:4px}
-.tams{display:flex;flex-direction:column;gap:22px}
-.tams{min-width:0}
-.grande{width:min(100%,900px);height:auto;display:block}
-.linha{display:flex;align-items:center;gap:36px;flex-wrap:wrap}
-.medio{height:64px;width:auto;display:block}
-.topo{height:38px;width:auto;display:block}
-.tv{height:90px;width:auto;display:block}
+/* Ferramenta local: o logo desenhado ao lado da arte de referência (não faz parte do site). */
+body{margin:0;background:#000;color:#fff;font:13px/1.5 "IBM Plex Mono",monospace;padding:32px 40px 60px}
+h2{font:400 11px "IBM Plex Mono",monospace;letter-spacing:.2em;text-transform:uppercase;color:#86C190;margin:34px 0 14px;border-top:1px solid rgba(50,217,75,.25);padding-top:18px}
+.linha{display:flex;align-items:flex-end;gap:40px;flex-wrap:wrap}
+figure{margin:0}
+figcaption{color:#86C190;font-size:11px;margin-top:8px}
+svg,img{display:block;width:auto}
 </style>
 </head>
 <body>
-<h1>Studio Remo Game · variações da camuflagem no GAME</h1>
-<div id="lista"></div>
-<script>
-const NOMES = { a: "Padrão · manchas grandes", b: "Manchas miúdas, mais neon", c: "Mais escura e mais gasta" };
-document.getElementById("lista").innerHTML = ["a", "b", "c"].map((v) =>
-  '<section class="v"><b>' + v.toUpperCase() + '<small>' + NOMES[v] + '</small></b><div class="tams">' +
-  '<svg class="grande" data-logo="" data-camo="' + v + '"></svg>' +
-  '<div class="linha"><svg class="medio" data-logo="" data-camo="' + v + '"></svg><svg class="topo" data-logo="" data-camo="' + v + '"></svg><svg class="tv" data-logo="game" data-camo="' + v + '"></svg></div>' +
-  "</div></section>").join("");
-</script>
+<h2>GAME — referência × desenhado (mesma altura)</h2>
+<div class="linha">
+  <figure><img src="referencia-game.png" style="height:200px"><figcaption>referência</figcaption></figure>
+  <figure><svg data-logo="game" style="height:150px"></svg><figcaption>desenhado</figcaption></figure>
+</div>
+<h2>Tamanhos de uso</h2>
+<div class="linha">
+  <figure><img src="referencia-game.png" style="height:66px"><figcaption>referência · tamanho original</figcaption></figure>
+  <figure><svg data-logo="game" style="height:120px"></svg><figcaption>telão · 120px</figcaption></figure>
+  <figure><svg data-logo="game" style="height:50px"></svg><figcaption>50px</figcaption></figure>
+</div>
+<h2>Logo completo</h2>
+<div class="linha">
+  <figure><svg data-logo="" style="height:140px;max-width:100%"></svg><figcaption>grande</figcaption></figure>
+  <figure><svg data-logo="" style="height:38px"></svg><figcaption>topo do site · 38px</figcaption></figure>
+  <figure><svg data-logo="" style="height:31px"></svg><figcaption>topo no celular · 31px</figcaption></figure>
+</div>
 <script src="../assets/logo.js"></script>
 </body>
 </html>

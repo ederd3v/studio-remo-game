@@ -1353,9 +1353,8 @@ body.modo-tv .topbar,body.modo-tv .tabbar,body.modo-tv .foot,body.modo-tv .skip{
 .tv__palco{width:1140px;flex:none}
 .tv__head{display:flex;align-items:center;gap:30px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--line)}
 .tv__titulo{margin:0;line-height:0;flex:none}
-/* GAME camuflado (desenhado em assets/logo.js) */
-.tv__game{display:block;height:120px;width:auto;overflow:visible;
-  filter:drop-shadow(0 0 22px rgba(0,252,39,.25))}
+/* GAME verde rachado, como a arte de referência (desenhado em assets/logo.js) */
+.tv__game{display:block;height:120px;width:auto;overflow:visible}
 .tv__ctx{min-width:0}
 .tv__ctx small{display:block;margin-bottom:8px;font-family:"IBM Plex Mono",monospace;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .tv__ctx h2{font-family:var(--display);font-size:2.75rem;line-height:1;letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
