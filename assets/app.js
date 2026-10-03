@@ -326,7 +326,7 @@
     if (REDUZ) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const cores = ["#8CE04E", "#B6F27A", "#FFFFFF", "#34D399", "#D9F99D"]; // verde e branco
+    const cores = ["#00FC27", "#32D94B", "#FFFFFF", "#7CFF95", "#C8FF7A"]; // verdes da marca e branco
     // dois canhões nos cantos de baixo, atirando para o centro
     [[0.06, 1], [0.94, -1]].forEach(([fx, lado]) => {
       for (let i = 0; i < 80; i++) {
@@ -1172,6 +1172,9 @@
   }
 
   /* ---------- início ---------- */
+  // assinatura Studio Remo pousada na moldura de cada página (o remador do topo + o nome)
+  const assinatura = '<span class="assinatura" aria-hidden="true">' + $(".brand__mark").innerHTML + "<span>Studio Remo</span></span>";
+  $$(".view").forEach((v) => v.insertAdjacentHTML("beforeend", assinatura));
   montarFiltros();
   montarFiltrosCelular();
   montarSeletorAtleta();
