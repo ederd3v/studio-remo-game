@@ -117,12 +117,8 @@ main:focus{outline:none}
 .brand__mark{width:48px;height:36px;display:block;flex:none;color:var(--accent);transition:transform .5s var(--ease)}
 .brand:hover .brand__mark{transform:translateX(4px) rotate(-3deg)}
 .brand__mark svg{width:100%;height:100%;display:block}
-.brand__txt{display:flex;flex-direction:column;line-height:1}
-.brand__txt b{
-  font-family:var(--display);font-weight:800;font-stretch:112%;
-  font-size:.9375rem;letter-spacing:.02em;text-transform:uppercase;
-}
-.brand__txt span{font-size:.625rem;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;margin-top:4px;font-family:"IBM Plex Mono",monospace}
+/* o logo (desenhado em assets/logo.js): a altura manda, a largura acompanha */
+.brand__logo{display:block;height:38px;width:auto;flex:none;overflow:visible}
 
 .nav{
   position:relative;display:flex;gap:2px;padding:4px;border-radius:12px;
@@ -309,8 +305,6 @@ main:focus{outline:none}
   line-height:.85;color:var(--muted);text-align:center;
 }
 .lane--1 .lane__pos{font-size:2.9rem;color:var(--ink)}
-.lane__pos small{display:block;font-family:"IBM Plex Mono",monospace;font-size:.5rem;
-  letter-spacing:.14em;color:var(--muted);font-weight:400;margin-top:5px}
 .lane__body{min-width:0}
 .lane__name{
   font-family:var(--display);font-weight:800;font-stretch:106%;font-size:1.0625rem;
@@ -356,7 +350,6 @@ main:focus{outline:none}
   .lane--1{padding-block:15px 16px}
   .lane__pos{font-size:1.5rem;padding-top:1px}
   .lane--1 .lane__pos{font-size:2.1rem}
-  .lane__pos small{display:none}
   .lane__name{font-size:.9375rem;gap:6px;flex-wrap:nowrap;min-width:0}
   .lane--1 .lane__name{font-size:1.0625rem}
   .lane__name .alink{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -996,8 +989,7 @@ body{-webkit-tap-highlight-color:transparent}
   .wrap{padding-inline:16px}
   .topbar__in{height:56px;gap:12px}
   .brand__mark{width:40px;height:30px}
-  .brand__txt b{font-size:.875rem}
-  .brand__txt span{font-size:.5625rem}
+  .brand__logo{height:31px}
   .themebtn{width:34px;height:34px}
 
   .phead{padding:22px 0 16px}
@@ -1290,7 +1282,6 @@ h1,h2,h3{letter-spacing:.01em}
 .cta h2{font-size:clamp(1.625rem,3.2vw,2.375rem)}
 .gate h2{font-size:2rem}
 .profile__id h2{font-size:clamp(2.25rem,4.4vw,3.25rem)}
-.brand__txt b{font-size:1.3125rem;letter-spacing:.04em}
 .lane__pos{font-size:2.4rem}
 .lane--1 .lane__pos{font-size:3.6rem}
 .lane__name{font-size:1.375rem;letter-spacing:.03em}
@@ -1362,10 +1353,9 @@ body.modo-tv .topbar,body.modo-tv .tabbar,body.modo-tv .foot,body.modo-tv .skip{
 .tv__palco{width:1140px;flex:none}
 .tv__head{display:flex;align-items:center;gap:30px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--line)}
 .tv__titulo{margin:0;line-height:0;flex:none}
-/* GAME no estilo da marca: letra grossa e condensada, verde com textura rachada */
+/* GAME camuflado (desenhado em assets/logo.js) */
 .tv__game{display:block;height:120px;width:auto;overflow:visible;
-  filter:drop-shadow(0 0 22px rgba(0,252,39,.35)) drop-shadow(0 3px 0 #021A07)}
-.tv__game text{font-family:"Anton","Bebas Neue",Impact,sans-serif;font-size:172px;letter-spacing:5px}
+  filter:drop-shadow(0 0 22px rgba(0,252,39,.25))}
 .tv__ctx{min-width:0}
 .tv__ctx small{display:block;margin-bottom:8px;font-family:"IBM Plex Mono",monospace;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .tv__ctx h2{font-family:var(--display);font-size:2.75rem;line-height:1;letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}

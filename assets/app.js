@@ -459,7 +459,7 @@
     const gap = r.t - lider, pct = Math.max(22, 100 - (gap / lider) * 320);
     return '<article class="lane lane--' + (i + 1) + ' spot" style="--u:' + UMAP[r.a.u].cor + ";--i:" + i + '" data-atleta="' + r.a.id + '">' +
       (i === 0 ? '<span class="lane__shine" aria-hidden="true"></span>' : "") +
-      '<div class="lane__pos">' + (i + 1) + "<small>RAIA</small></div>" +
+      '<div class="lane__pos">' + (i + 1) + "</div>" +
       '<div class="lane__body"><div class="lane__name">' + (noTelao ? esc(r.a.n) : linkAtleta(r.a)) +
       (i === 0 ? (ehRec ? ' <span class="tag tag--rec">' + (F.periodo === "geral" ? "Recorde" : "Melhor") + "</span>" : ' <span class="tag tag--lead">Líder</span>') : "") +
       (r.a.me && !noTelao ? ' <span class="tag tag--pr">Você</span>' : "") + "</div>" +
@@ -1182,65 +1182,7 @@
     if (rotaAtual === "tv") tvOcioso = setTimeout(() => document.body.classList.add("tv-ocioso"), 2500);
   }
 
-  // GAME no estilo da arte da marca: a letra é um mosaico de placas verdes (tons diferentes),
-  // separadas por rachaduras escuras, com algumas lascas faltando. Sempre igual (semente fixa).
-  function desenharGame() {
-    const gp = $("#game-placas"), gr = $("#game-rachas");
-    if (!gp || !gr) return;
-    const r = semente("studio-remo-game"), W = 440, H = 170, C = 31;
-    // pontos de um grid "tremido" viram o centro de cada placa
-    const pts = [];
-    for (let y = -C / 2; y < H + C; y += C) for (let x = -C / 2; x < W + C; x += C) {
-      pts.push([x + (r() - 0.5) * C * 0.95, y + (r() - 0.5) * C * 0.95]);
-    }
-    // corta um polígono pelo semiplano mais perto de "s" do que de "o" (Voronoi por recorte)
-    function recorta(poly, s, o) {
-      const mx = (s[0] + o[0]) / 2, my = (s[1] + o[1]) / 2, nx = o[0] - s[0], ny = o[1] - s[1], out = [];
-      const f = (q) => (q[0] - mx) * nx + (q[1] - my) * ny;
-      for (let k = 0; k < poly.length; k++) {
-        const a = poly[k], b = poly[(k + 1) % poly.length], fa = f(a), fb = f(b);
-        if (fa <= 0) out.push(a);
-        if ((fa <= 0) !== (fb <= 0)) { const u = fa / (fa - fb); out.push([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]); }
-      }
-      return out;
-    }
-    const verdes = ["#A4E54F", "#94DC45", "#86D33E", "#79C937", "#6CBE31", "#5EAF2C", "#4C9726"];
-    let placas = "";
-    pts.forEach((s) => {
-      if (s[0] < -C || s[0] > W + C || s[1] < -C || s[1] > H + C) return;
-      let poly = [[s[0] - C * 2, s[1] - C * 2], [s[0] + C * 2, s[1] - C * 2], [s[0] + C * 2, s[1] + C * 2], [s[0] - C * 2, s[1] + C * 2]];
-      pts.forEach((o) => {
-        if (o === s || Math.abs(o[0] - s[0]) > C * 3 || Math.abs(o[1] - s[1]) > C * 3) return;
-        poly = recorta(poly, s, o);
-      });
-      if (poly.length < 3 || r() < 0.035) return; // de vez em quando falta uma lasca
-      // encolhe a placa em direção ao centro: o vão vira a rachadura
-      const cx = poly.reduce((a, q) => a + q[0], 0) / poly.length, cy = poly.reduce((a, q) => a + q[1], 0) / poly.length;
-      const gap = 0.75 + r() * 0.35;
-      const pp = poly.map((q) => {
-        const dx = cx - q[0], dy = cy - q[1], dist = Math.hypot(dx, dy) || 1, k = Math.min(1, gap / dist);
-        return (q[0] + dx * k + (r() - 0.5) * 0.9).toFixed(1) + "," + (q[1] + dy * k + (r() - 0.5) * 0.9).toFixed(1);
-      });
-      const cor = verdes[Math.min(verdes.length - 1, Math.floor((r() + r()) / 2 * verdes.length))]; // a maioria nos tons do meio
-      placas += '<polygon points="' + pp.join(" ") + '" fill="' + cor + '"/>';
-    });
-    gp.innerHTML = placas;
-    // trincas finas dentro das placas
-    let d = "";
-    for (let i = 0; i < 22; i++) {
-      let x = r() * W, y = r() * H, ang = r() * Math.PI * 2;
-      const seg = [[x, y]];
-      for (let k = 0; k < 2 + Math.floor(r() * 3); k++) {
-        ang += (r() - 0.5) * 1.6; const passo = 4 + r() * 7;
-        x += Math.cos(ang) * passo; y += Math.sin(ang) * passo; seg.push([x, y]);
-      }
-      d += "M" + seg.map((q) => q[0].toFixed(1) + " " + q[1].toFixed(1)).join("L");
-    }
-    gr.innerHTML = '<path d="' + d + '" stroke="#0A2A0A" stroke-width="1" stroke-opacity=".85"/>';
-  }
-
   function ligarTV() {
-    desenharGame();
     $("#tv-btn").addEventListener("click", () => {
       const el = document.documentElement;
       if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});

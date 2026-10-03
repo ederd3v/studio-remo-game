@@ -9,8 +9,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚣</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Kaushan+Script&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=16">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Black+Ops+One&family=Kaushan+Script&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css?v=17">
 <script>try{var t=localStorage.getItem('srg-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
@@ -34,7 +34,7 @@
           <circle cx="19" cy="19.6" r="4.3" fill="currentColor"/>
         </svg>
       </span>
-      <span class="brand__txt"><b>Studio Remo Game</b><span>Remo indoor · SC</span></span>
+      <svg class="brand__logo" data-logo="" aria-label="Studio Remo Game — Remo indoor · SC"></svg>
     </a>
     <nav class="nav" id="nav" aria-label="Principal">
       <span class="nav__ind" id="nav-ind" aria-hidden="true"></span>
@@ -328,30 +328,7 @@
     <div class="tv__palco" id="tv-palco">
       <header class="tv__head">
         <h1 class="tv__titulo" id="tv-titulo">
-          <svg class="tv__game" viewBox="0 0 440 170" role="img" aria-label="Game">
-            <defs>
-              <!-- o formato das letras recorta as placas -->
-              <clipPath id="game-letras"><text x="220" y="150" text-anchor="middle">GAME</text></clipPath>
-              <!-- bordas gastas, com lascas, como na arte da marca -->
-              <filter id="game-borda" x="-3%" y="-3%" width="106%" height="106%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="9" result="r"/>
-                <feDisplacementMap in="SourceGraphic" in2="r" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
-              </filter>
-              <!-- granulado leve dentro das placas -->
-              <filter id="game-grao" x="0" y="0" width="100%" height="100%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="2" seed="3"/>
-                <feColorMatrix type="matrix" values="0 0 0 0 .9  0 0 0 0 1  0 0 0 0 .7  1.6 0 0 0 -.95"/>
-              </filter>
-            </defs>
-            <g filter="url(#game-borda)">
-              <g clip-path="url(#game-letras)">
-                <rect width="440" height="170" fill="#0B240B"/>
-                <g id="game-placas"></g>
-                <rect width="440" height="170" filter="url(#game-grao)" opacity=".18"/>
-                <g id="game-rachas" fill="none" stroke-linecap="round" stroke-linejoin="round"></g>
-              </g>
-            </g>
-          </svg>
+          <svg class="tv__game" data-logo="game" aria-label="Game"></svg>
         </h1>
         <div class="tv__ctx">
           <small id="tv-per">Classificação geral</small>
@@ -394,6 +371,7 @@
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
-<script src="assets/app.js?v=16"></script>
+<script src="assets/logo.js?v=1"></script>
+<script src="assets/app.js?v=17"></script>
 </body>
 </html>
