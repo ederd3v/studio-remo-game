@@ -1191,7 +1191,7 @@
     const w = view.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     const h = view.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
     const z = Math.min(w / palco.offsetWidth, h / palco.offsetHeight);
-    palco.style.zoom = Math.max(0.5, z).toFixed(3);
+    palco.style.zoom = Math.max(0.2, z).toFixed(3);
   }
 
   // ordem pedida pelo cliente: masculino 500m subindo a idade, depois 1.000m e best time; feminino igual;
