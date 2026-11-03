@@ -295,11 +295,14 @@
     };
   }
 
-  // evolução sem recorte de período (pedido do cliente): do primeiro teste até o melhor tempo
+  // evolução sem recorte de período (pedido do cliente): do primeiro teste até o melhor tempo,
+  // só de quem está no filtro da tela (sexo, idade e unidade)
   function evolucaoTotal(dist) {
-    const por = {};
+    const por = {}, fx = FMAP[F.faixa];
     testes().forEach((t) => {
       if (t.dist !== dist) return;
+      const a = AMAP[t.a];
+      if ((F.s !== "T" && a.s !== F.s) || a.i < fx.min || a.i > fx.max || (F.uni !== "__all" && a.u !== F.uni)) return;
       const o = por[t.a] || (por[t.a] = { d0: Infinity, primeiro: 0, melhor: Infinity });
       if (t.d < o.d0) { o.d0 = t.d; o.primeiro = t.t; }
       o.melhor = Math.min(o.melhor, t.t);
@@ -581,11 +584,11 @@
       '<section class="card spot"><h3>Quem mais evoluiu</h3>' +
       '<div class="seg seg--evo" id="evo-dist" role="group" aria-label="Categoria da evolução">' +
       DISTS.map((d) => '<button type="button" data-evo="' + d + '" aria-pressed="' + (d === evoDist) + '">' + distLbl(d) + "</button>").join("") + "</div>" +
-      '<p class="card__hint">' + distLbl(evoDist) + " · do primeiro teste até o melhor tempo</p>" +
+      '<p class="card__hint">' + esc(rotuloCategoria(F.s, F.faixa, evoDist, F.uni).join(" · ")) + " · do primeiro teste até o melhor tempo</p>" +
       (evo.length ? '<ol class="evo">' + evo.map((x, i) =>
         '<li><span class="evo__n">' + (i + 1) + '</span><span class="avatar" style="--u:' + UMAP[x.a.u].cor + '">' + iniciais(x.a.n) + "</span>" +
         '<span class="evo__who">' + linkAtleta(x.a) + "<span>" + UMAP[x.a.u].sigla + " · melhor " + fmt(x.t) + "</span></span>" +
-        '<span class="evo__d">−' + x.d.toFixed(1) + "s</span></li>").join("") + "</ol>" : '<p class="card__hint">Ninguém melhorou no ' + distLbl(evoDist) + " desde o primeiro teste.</p>") +
+        '<span class="evo__d">−' + x.d.toFixed(1) + "s</span></li>").join("") + "</ol>" : '<p class="card__hint">Ninguém melhorou no ' + distLbl(evoDist) + " nessa categoria desde o primeiro teste.</p>") +
       "</section>";
   }
 
