@@ -259,7 +259,6 @@
   }
 
   /* ---------- consultas ---------- */
-  const corte = (dias) => new Date(HOJE.getTime() - dias * DIA);
   function classificar(o) {
     const fx = FMAP[o.faixa], best = {};
     testes().forEach((t) => {
@@ -296,15 +295,17 @@
     };
   }
 
-  function evolucao30(dist) {
-    const lim = corte(30), por = {};
+  // evolução sem recorte de período (pedido do cliente): do primeiro teste até o melhor tempo
+  function evolucaoTotal(dist) {
+    const por = {};
     testes().forEach((t) => {
       if (t.dist !== dist) return;
-      const o = por[t.a] || (por[t.a] = { antes: Infinity, agora: Infinity });
-      if (t.d < lim) o.antes = Math.min(o.antes, t.t); else o.agora = Math.min(o.agora, t.t);
+      const o = por[t.a] || (por[t.a] = { d0: Infinity, primeiro: 0, melhor: Infinity });
+      if (t.d < o.d0) { o.d0 = t.d; o.primeiro = t.t; }
+      o.melhor = Math.min(o.melhor, t.t);
     });
     return Object.keys(por)
-      .map((id) => ({ a: AMAP[id], d: por[id].antes - por[id].agora, t: por[id].agora }))
+      .map((id) => ({ a: AMAP[id], d: por[id].primeiro - por[id].melhor, t: por[id].melhor }))
       .filter((x) => isFinite(x.d) && x.d > 0.05)
       .sort((x, y) => y.d - x.d).slice(0, 5);
   }
@@ -569,7 +570,7 @@
   let evoDist = 500;
   function renderLateral() {
     const recs = DISTS.map((dist) => ({ dist, r: classificar({ s: F.s, faixa: F.faixa, dist })[0] }));
-    const evo = evolucao30(evoDist);
+    const evo = evolucaoTotal(evoDist);
     $("#rk-side").innerHTML =
       '<section class="card spot"><h3>Recordes da casa</h3><p class="card__hint">' + esc(rotuloCategoria(F.s, F.faixa).join(" · ")) + " · toque para ver a categoria</p>" +
       '<div class="reclist">' + recs.map((x) =>
@@ -580,11 +581,11 @@
       '<section class="card spot"><h3>Quem mais evoluiu</h3>' +
       '<div class="seg seg--evo" id="evo-dist" role="group" aria-label="Categoria da evolução">' +
       DISTS.map((d) => '<button type="button" data-evo="' + d + '" aria-pressed="' + (d === evoDist) + '">' + distLbl(d) + "</button>").join("") + "</div>" +
-      '<p class="card__hint">' + distLbl(evoDist) + " · últimos 30 dias contra o melhor anterior</p>" +
+      '<p class="card__hint">' + distLbl(evoDist) + " · do primeiro teste até o melhor tempo</p>" +
       (evo.length ? '<ol class="evo">' + evo.map((x, i) =>
         '<li><span class="evo__n">' + (i + 1) + '</span><span class="avatar" style="--u:' + UMAP[x.a.u].cor + '">' + iniciais(x.a.n) + "</span>" +
-        '<span class="evo__who">' + linkAtleta(x.a) + "<span>" + UMAP[x.a.u].sigla + " · agora " + fmt(x.t) + "</span></span>" +
-        '<span class="evo__d">−' + x.d.toFixed(1) + "s</span></li>").join("") + "</ol>" : '<p class="card__hint">Ninguém melhorou no ' + distLbl(evoDist) + " nos últimos 30 dias.</p>") +
+        '<span class="evo__who">' + linkAtleta(x.a) + "<span>" + UMAP[x.a.u].sigla + " · melhor " + fmt(x.t) + "</span></span>" +
+        '<span class="evo__d">−' + x.d.toFixed(1) + "s</span></li>").join("") + "</ol>" : '<p class="card__hint">Ninguém melhorou no ' + distLbl(evoDist) + " desde o primeiro teste.</p>") +
       "</section>";
   }
 
@@ -636,8 +637,9 @@
     });
     P.pos = P.rk[500].i >= 0 ? P.rk[500].i + 1 : null;
     P.total = P.rk[500].rk.length;
-    const ano = P.porDist[500].filter((t) => t.d >= corte(365));
-    P.evo = ano.length > 1 ? Math.max(0, r1(ano[0].t - Math.min.apply(null, ano.map((t) => t.t)))) : 0;
+    // evolução do primeiro teste de 500m até o melhor (sem recorte de período)
+    const ts5 = P.porDist[500].slice().sort((x, y) => x.d - y.d);
+    P.evo = ts5.length > 1 ? Math.max(0, r1(ts5[0].t - Math.min.apply(null, ts5.map((t) => t.t)))) : 0;
     P.conq = conquistas(P);
     P.nConq = P.conq.filter((c) => c.ok).length;
     P.xp = P.n * 40 + P.prs * 90 + P.nConq * 150;
@@ -664,7 +666,7 @@
       { nome: "Recordista da casa", desc: "1º da faixa em alguma categoria", ico: "crown", ok: P.lider.length > 0, prog: P.lider.length ? 1 : 0, st: P.lider.length ? "Recorde no " + P.lider.map(distLbl).join(", ") : "Ainda não", gold: true },
       { nome: "Sub-" + subL, desc: "500m abaixo de " + subL, ico: "bolt", ok: b5 != null && b5 < sub, prog: b5 ? cl(sub / b5) : 0, st: b5 == null ? "Sem 500m" : b5 < sub ? "Melhor: " + fmt(b5) : "Faltam " + r1(b5 - sub + 0.1).toFixed(1) + "s" },
       { nome: "Motor de 1.000m", desc: "1.000m abaixo de " + milL, ico: "gauge", ok: b1 != null && b1 < mil, prog: b1 ? cl(mil / b1) : 0, st: b1 == null ? "Sem 1.000m" : b1 < mil ? "Melhor: " + fmt(b1) : "Faltam " + r1(b1 - mil + 0.1).toFixed(1) + "s" },
-      { nome: "Evolução relâmpago", desc: "−5s no 500m em 12 meses", ico: "flame", ok: P.evo >= 5, prog: cl(P.evo / 5), st: "−" + P.evo.toFixed(1) + "s de 5s" },
+      { nome: "Evolução relâmpago", desc: "−5s no 500m desde o primeiro teste", ico: "flame", ok: P.evo >= 5, prog: cl(P.evo / 5), st: "−" + P.evo.toFixed(1) + "s de 5s" },
     ];
   }
 
@@ -709,7 +711,7 @@
     html += '<div class="ptiles">' +
       '<div class="ptile ptile--brass"><span>Recorde 500m</span><b data-count="' + (P.best[500] || 0) + '" data-fmt="tempo">' + (P.best[500] ? fmt(P.best[500]) : "—") + "</b></div>" +
       '<div class="ptile"><span>Na faixa · 500m</span><b data-count="' + (P.pos || 0) + '" data-fmt="pos">' + (P.pos ? P.pos + "º" : "—") + "</b><small>de " + P.total + "</small></div>" +
-      '<div class="ptile ptile--up"><span>Evolução 12 meses</span><b data-count="' + P.evo + '" data-fmt="menos">−' + P.evo.toFixed(1) + "s</b></div>" +
+      '<div class="ptile ptile--up"><span>Evolução total</span><b data-count="' + P.evo + '" data-fmt="menos">−' + P.evo.toFixed(1) + "s</b></div>" +
       '<div class="ptile"><span>Testes validados</span><b data-count="' + P.n + '" data-fmt="int">' + P.n + "</b></div>" +
       "</div></section>";
 
@@ -972,12 +974,12 @@
     const hojeVal = state.added.filter((x) => x.status === "validado" && new Date(x.d) >= HOJE).length;
     const fila = state.added.filter((x) => x.status === "pendente").length;
     const recs = state.log.filter((x) => x.rec && new Date(x.d) >= HOJE).length;
-    const ativos = new Set(testes().filter((t) => t.d >= corte(30)).map((t) => t.a)).size;
+    const ativos = new Set(testes().map((t) => t.a)).size;
     box.innerHTML =
       '<div class="kpi kpi--accent"><span>Validados hoje</span><b data-count="' + hojeVal + '">' + hojeVal + "</b></div>" +
       '<div class="kpi"><span>Na fila</span><b data-count="' + fila + '">' + fila + "</b></div>" +
       '<div class="kpi kpi--brass"><span>Recordes hoje</span><b data-count="' + recs + '">' + recs + "</b></div>" +
-      '<div class="kpi"><span>Ativos · 30 dias</span><b data-count="' + ativos + '">' + ativos + "</b></div>";
+      '<div class="kpi"><span>Atletas no ranking</span><b data-count="' + ativos + '">' + ativos + "</b></div>";
     contar(box);
   }
 

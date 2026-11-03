@@ -1,5 +1,5 @@
 /* ============================================================
-   LOGO — "STUDIO REMO" branco · "GAME" verde rachado · "REMO INDOOR · SC" verde
+   LOGO — "STUDIO REMO" verde · "GAME" verde rachado · "REMO INDOOR · SC" verde
    ------------------------------------------------------------
    Toda <svg data-logo> da página vira o logo, desenhado em SVG:
    · data-logo=""      → logo completo (topo do site)
@@ -123,7 +123,7 @@
         '<filter id="' + id + 'sombra"><feGaussianBlur stdDeviation="2.5"/></filter>' +
       "</defs>" +
       (soGame ? "" :
-        '<text x="' + n1((sr.esq * tamS) / 100) + '" y="' + CAP + '" style="fill:var(--ink,#fff)" font-family=\'' + PILHA.marca + '\' font-size="' + n1(tamS) + '">STUDIO REMO</text>' +
+        '<text x="' + n1((sr.esq * tamS) / 100) + '" y="' + CAP + '" style="fill:var(--accent,#00FC27)" font-family=\'' + PILHA.marca + '\' font-size="' + n1(tamS) + '">STUDIO REMO</text>' +
         '<text x="0" y="' + n1(subY) + '" style="fill:var(--accent,#00FC27)" font-family=\'' + PILHA.sub + '\' font-weight="500" font-size="' + n1(sub.tam) + '" letter-spacing="' + n1(sub.esp) + '">REMO INDOOR · SC</text>') +
       '<g class="logo__game" filter="url(#' + id + 'borda)"><g clip-path="url(#' + id + 'letras)">' +
         "<rect " + caixa + ' filter="url(#' + id + 'verde)"/>' +
