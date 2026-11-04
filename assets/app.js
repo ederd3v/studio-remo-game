@@ -406,6 +406,25 @@
     }).join("") + "</ol>";
   }
 
+  // pódio do celular: 2º · 1º · 3º em degraus, com as iniciais na cor da unidade
+  function podioCelular(lista, categoria) {
+    const lider = lista[0].t;
+    const degrau = (r, i) => {
+      const ehRec = i === 0 && r === categoria[0], nome = r.a.n.split(" ");
+      return '<a class="pod pod--' + (i + 1) + (r.a.me ? " pod--me" : "") + '" href="#/progresso/' + r.a.id + '" style="--u:' + UMAP[r.a.u].cor + ";--i:" + i + '">' +
+        '<span class="pod__av">' + iniciais(r.a.n) + (i === 0 ? '<span class="pod__coroa" aria-hidden="true">' + ic("crown") + "</span>" : "") + "</span>" +
+        '<span class="pod__nome"><b>' + esc(nome[0]) + "</b>" + esc(nome.slice(1).join(" ")) + "</span>" +
+        '<span class="pod__t">' + fmt(r.t) + "</span>" +
+        '<span class="pod__info">' + UMAP[r.a.u].sigla + (F.s === "T" ? " · " + SEXO_CURTO[r.a.s] : "") +
+        (i === 0 ? (ehRec ? ' · <em class="is-rec">Recorde</em>' : " · Líder") : " · +" + (r.t - lider).toFixed(1) + "s") +
+        (r.a.me ? ' · <em class="is-me">você</em>' : "") + "</span>" +
+        '<span class="pod__bloco"><span>' + (i + 1) + "</span></span></a>";
+    };
+    return '<div class="podio" role="list" aria-label="Pódio">' + [1, 0, 2].map((i) => degrau(lista[i], i)).join("") + "</div>";
+  }
+  // no celular o pódio aparece quando há pelo menos 3 atletas; a lista começa no 4º
+  const comPodio = (lista) => CELULAR.matches && lista.length >= 3;
+
   function montarFiltros() {
     $("#f-faixa").innerHTML = '<option value="todas">Todas as idades</option>' + FAIXAS.map((f) => '<option value="' + f.id + '">' + f.label + "</option>").join("");
     $("#f-uni").innerHTML = '<option value="__all">Todas as unidades</option>' +
@@ -420,6 +439,8 @@
      que continuam sendo a fonte da verdade. */
   let antesDoGeral = null; // sexo e idade de antes de ligar o Geral (desligar volta para eles)
   function montarFiltrosCelular() {
+    $("#mf-resumo").addEventListener("click", abrirFiltros);
+    posicionarFiltros();
     // a letra da categoria sempre à vista; "anos" só no celular — no desktop o título "Faixa etária" já diz
     $("#mf-faixa").innerHTML = '<button type="button" class="chip-btn" data-mf-f="todas"><span>Todas<span class="chip-anos"> as idades</span></span></button>' + FAIXAS.map((f) =>
       '<button type="button" class="chip-btn" data-mf-f="' + f.id + '"><b class="chip-cat">' + f.letra + "</b><span>" + f.idade + '<span class="chip-anos"> anos</span></span></button>').join("");
@@ -447,6 +468,43 @@
       }
     });
   }
+  /* celular: os filtros vão para uma gaveta que sobe de baixo (fica no <body>, por cima do menu);
+     no desktop voltam para o lugar deles, abaixo do título */
+  const folha = document.createElement("div");
+  folha.className = "folha"; folha.id = "folha"; folha.hidden = true;
+  folha.innerHTML = '<div class="folha__fundo" data-fechar></div>' +
+    '<div class="folha__painel" role="dialog" aria-modal="true" aria-labelledby="folha-t">' +
+      '<div class="folha__alca" aria-hidden="true"></div>' +
+      '<div class="folha__topo"><h2 id="folha-t">Filtros</h2><button type="button" class="folha__x" data-fechar aria-label="Fechar">' + ic("x") + "</button></div>" +
+      '<div class="folha__corpo"></div>' +
+      '<div class="folha__pe"><button type="button" class="btn folha__ver" id="folha-ver" data-fechar>Ver atletas</button></div>' +
+    "</div>";
+  document.body.appendChild(folha);
+  const lugarDosFiltros = document.createComment("filtros");
+  function posicionarFiltros() {
+    const mf = $("#mf");
+    if (CELULAR.matches) {
+      if (mf.parentNode !== $(".folha__corpo", folha)) { mf.before(lugarDosFiltros); $(".folha__corpo", folha).appendChild(mf); }
+    } else {
+      fecharFiltros();
+      if (lugarDosFiltros.parentNode) lugarDosFiltros.replaceWith(mf);
+    }
+  }
+  function abrirFiltros() {
+    folha.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add("folha-aberta")));
+    $("#mf-resumo").setAttribute("aria-expanded", "true");
+    setTimeout(() => $(".folha__x", folha).focus({ preventScroll: true }), 50);
+  }
+  function fecharFiltros() {
+    if (folha.hidden) return;
+    document.body.classList.remove("folha-aberta");
+    $("#mf-resumo").setAttribute("aria-expanded", "false");
+    setTimeout(() => { if (!document.body.classList.contains("folha-aberta")) folha.hidden = true; }, REDUZ ? 0 : 380);
+  }
+  folha.addEventListener("click", (e) => { if (e.target.closest("[data-fechar]")) fecharFiltros(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharFiltros(); });
+
   // o botão escolhido sempre fica à vista na fileira
   function trazerParaVista(fila, btn) {
     if (!btn) return;
@@ -462,6 +520,11 @@
     $$("[data-mf-u]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mfU === F.uni)));
     const geral = F.s === "T" && F.faixa === "todas";
     $("#mf-geral").setAttribute("aria-pressed", String(geral));
+    // a barra do celular mostra o que está escolhido
+    const fx = FMAP[F.faixa], uni = F.uni === "__all" ? null : UMAP[F.uni];
+    $("#mf-resumo-itens").innerHTML = (geral ? ["<b>Geral</b>"] : ["<b>" + (SEXO_CURTO[F.s] || SEXOS[F.s]) + "</b>", fx.letra ? '<span class="resumo__cat">' + fx.letra + "</span>" + fx.idade : "Todas as idades"])
+      .concat([distLbl(F.dist)], uni ? ['<i style="--u:' + uni.cor + '"></i>' + uni.sigla] : []) // unidade só aparece quando há uma escolhida
+      .map((p) => '<span class="resumo__item">' + p + "</span>").join("");
     $("#mf-geral-sub").textContent = "Homens e mulheres, todas as idades · " + (F.uni === "__all" ? "todas as unidades" : F.uni);
     trazerParaVista($("#mf-faixa"), $('#mf-faixa [aria-pressed="true"]'));
     trazerParaVista($("#mf-uni"), $('#mf-uni [aria-pressed="true"]'));
@@ -517,10 +580,11 @@
     $("#ctx-title").innerHTML = rotuloCategoria(F.s, F.faixa, F.dist, F.uni)
       .map((p) => '<span class="nw">' + esc(p) + "</span>").join(" · ");
 
-    /* pódio — top 5 (no celular a lista de todos já mostra) */
+    /* pódio — top 5 nas raias do desktop; no celular, os 3 primeiros em degraus */
     const lanes = $("#lanes");
-    lanes.innerHTML = !lista.length || CELULAR.matches ? "" :
+    lanes.innerHTML = !lista.length ? "" : CELULAR.matches ? (comPodio(lista) ? podioCelular(lista, categoria) : "") :
       lista.slice(0, TOP).map((r, i) => raiaHTML(r, i, lista[0].t, i === 0 && r === categoria[0], false, F.s === "T")).join("");
+    $("#folha-ver").textContent = "Ver " + lista.length + " atleta" + (lista.length === 1 ? "" : "s");
     renderTabela();
     renderLateral();
   }
@@ -530,7 +594,8 @@
     const lider = lista.length ? lista[0].t : 0, q = normal(rkBusca.trim());
     const todos = lista.map((r, i) => ({ r, pos: i + 1 }));
     const achados = q ? todos.filter((x) => normal(x.r.a.n).indexOf(q) >= 0) : todos;
-    const vis = q ? achados : achados.slice(0, rkMostra);
+    const inicio = !q && comPodio(lista) ? 3 : 0; // os 3 primeiros já estão no pódio do celular
+    const vis = q ? achados : achados.slice(inicio, inicio + rkMostra);
     const rot = rotuloCategoria(F.s, F.faixa, F.dist, F.uni).join(" · ");
     $("#rk-info").textContent = (q ? achados.length + " de " + lista.length : lista.length) + " atleta" + (lista.length === 1 ? "" : "s") + " · " + rot;
 
@@ -539,6 +604,7 @@
       host.innerHTML = '<div class="empty"><b>Nenhum tempo nessa categoria</b>Ainda não há resultado para essa combinação. Experimente o Geral ou peça ao professor para lançar.</div>';
       return;
     }
+    if (!vis.length && !q) { host.innerHTML = ""; return; } // só os 3 do pódio
     if (!vis.length) {
       host.innerHTML = '<div class="empty"><b>Ninguém com “' + esc(rkBusca.trim()) + '” aqui</b>A busca olha só esta categoria. Para procurar em todos os atletas, use o Geral com todas as unidades.</div>';
       return;
@@ -561,11 +627,11 @@
           '<td class="num dif" data-l="Dif. do líder"><span class="delta">' + (pos === 1 ? "líder" : "+" + (r.t - lider).toFixed(1) + "s") + "</span></td></tr>"
         ).join("") + "</tbody></table>";
     }
-    const falta = q ? 0 : lista.length - vis.length;
+    const falta = q ? 0 : lista.length - inicio - vis.length;
     if (falta > 0) {
       pe.innerHTML = '<button type="button" class="btn btn--ghost" data-mais="' + PASSO + '">' + ic("plus") + "Ver mais " + Math.min(PASSO, falta) + "</button>" +
         (falta > PASSO ? '<button type="button" class="btn btn--ghost" data-mais="tudo">Ver todos os ' + lista.length + "</button>" : "");
-    } else if (!q && lista.length > PASSO) {
+    } else if (!q && lista.length - inicio > PASSO) {
       pe.innerHTML = '<button type="button" class="btn btn--ghost" data-mais="menos">Mostrar menos</button>';
     }
   }
@@ -1336,6 +1402,7 @@
     window.addEventListener("scroll", revelar, { passive: true });
     // virou celular ↔ desktop (girar o aparelho, redimensionar): troca lista ↔ raias
     function trocouTamanho() {
+      posicionarFiltros();
       if (rotaAtual === "ranking" && rankingNoCelular !== CELULAR.matches) renderRanking();
     }
     window.addEventListener("resize", () => { moverIndicador(true); revelar(); trocouTamanho(); });
