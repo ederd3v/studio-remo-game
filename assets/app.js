@@ -417,9 +417,10 @@
         '<span class="pod__av">' + iniciais(r.a.n) + (i === 0 ? '<span class="pod__coroa" aria-hidden="true">' + ic("crown") + "</span>" : "") + "</span>" +
         '<span class="pod__nome"><b>' + esc(nome[0]) + "</b>" + esc(nome.slice(1).join(" ")) + "</span>" +
         '<span class="pod__t">' + fmt(r.t) + "</span>" +
-        '<span class="pod__info">' + UMAP[r.a.u].sigla + (F.s === "T" ? " · " + SEXO_CURTO[r.a.s] : "") +
+        // "você" entra no lugar da sigla (o anel tracejado já marca), para caber no degrau estreito
+        '<span class="pod__info">' + (r.a.me ? '<em class="is-me">Você</em>' : UMAP[r.a.u].sigla) + (F.s === "T" ? " · " + SEXO_CURTO[r.a.s] : "") +
         (i === 0 ? (ehRec ? ' · <em class="is-rec">Recorde</em>' : " · Líder") : " · +" + (r.t - lider).toFixed(1) + "s") +
-        (r.a.me ? ' · <em class="is-me">você</em>' : "") + "</span>" +
+        "</span>" +
         '<span class="pod__bloco"><span>' + (i + 1) + "</span></span></a>";
     };
     return '<div class="podio" role="list" aria-label="Pódio">' + [1, 0, 2].map((i) => degrau(lista[i], i)).join("") + "</div>";
