@@ -1629,3 +1629,43 @@ body.tv-ocioso{cursor:none}
 @media(prefers-reduced-motion:reduce){.app-aviso{transition:none}}
 /* aberto como app: a barra do topo respeita o recorte da câmera do iPhone */
 .is-app .topbar{padding-top:env(safe-area-inset-top)}
+
+/* ============================================================ CARD DE RECORDE
+   Botões que abrem o card e a prévia com Compartilhar / Baixar imagem */
+.ibtn-share{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:9px;cursor:pointer;
+  border:1px solid color-mix(in srgb, var(--accent) 50%, transparent);background:var(--accent-wash);
+  color:var(--accent);font-size:.75rem;font-weight:700;letter-spacing:.02em;
+}
+.ibtn-share .ic{width:15px;height:15px}
+.ibtn-share:hover{background:color-mix(in srgb, var(--accent) 18%, transparent)}
+.pg-card{grid-column:1 / -1;justify-self:start;display:inline-flex;align-items:center;gap:8px;position:relative;z-index:1}
+@media(max-width:620px){.pg-card{justify-self:stretch;justify-content:center}}
+
+.cartao{position:fixed;inset:0;z-index:260;display:grid;place-items:center;padding:16px}
+.cartao[hidden]{display:none}
+.cartao__fundo{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .3s}
+.cartao__painel{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;
+  width:min(380px,100%);max-height:100%;opacity:0;transform:translateY(20px) scale(.97);transition:opacity .3s,transform .35s var(--ease);
+}
+.cartao.is-in .cartao__fundo{opacity:1}
+.cartao.is-in .cartao__painel{opacity:1;transform:none}
+.cartao__quadro{
+  position:relative;width:100%;aspect-ratio:9 / 16;max-height:calc(100dvh - 190px);border-radius:18px;overflow:hidden;
+  background:#000;border:1px solid var(--line);box-shadow:0 0 0 4px var(--accent-wash),0 30px 80px -20px var(--frame);
+}
+.cartao__quadro img{width:100%;height:100%;object-fit:contain;display:block}
+.cartao__gira{position:absolute;inset:0;margin:auto;width:38px;height:38px;border-radius:50%;
+  border:3px solid var(--line);border-top-color:var(--accent);animation:gira .8s linear infinite;display:none}
+.cartao.is-carregando .cartao__gira{display:block}
+.cartao.is-carregando img{visibility:hidden}
+@keyframes gira{to{transform:rotate(360deg)}}
+.cartao__acoes{display:flex;gap:10px;width:100%}
+.cartao__acoes .btn{flex:1;justify-content:center;padding:13px}
+.cartao__acoes .btn[hidden]{display:none}
+.cartao__dica{margin:0;font-size:.75rem;color:var(--muted);text-align:center}
+.cartao__x{position:absolute;top:-6px;right:-6px;z-index:2;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.cartao__x svg{width:18px;height:18px}
+@media(prefers-reduced-motion:reduce){.cartao__painel,.cartao__fundo{transition:none}.cartao__gira{animation:none}}

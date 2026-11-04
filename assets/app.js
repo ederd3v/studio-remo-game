@@ -351,12 +351,164 @@
     el.addEventListener("click", (e) => { if (!e.target.closest("a")) sai(); });
   }
 
+  /* ---------- card de recorde para compartilhar ----------
+     Uma imagem no formato do story (1080×1920), no padrão das peças do cliente: fundo preto,
+     moldura verde, GAME rachado, nome, tempo e assinatura Studio Remo. Abre numa prévia com
+     "Compartilhar" (WhatsApp, Instagram… pelo próprio celular) e "Baixar imagem". */
+  const COR_UNI = { "var(--u-itj)": "#32D94B", "var(--u-nav)": "#5EF2A0", "var(--u-joi)": "#C8FF7A", "var(--u-bc)": "#12A63A" };
+  const MARCA_REMADOR = [["M2 17h7M1 24h5M3 31h6", 2.1, 0.5], ["M25 31.5 L50 23.6", 2.6], ["M8 41 Q32 45.5 58 37", 3.1],
+    ["M26 35 L35 34 L42 37", 3.6], ["M26 35 L21 25", 4.4], ["M21 25 L33 29", 3.1]];
+  function remador(ctx, x, y, k, cor) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+    ctx.strokeStyle = ctx.fillStyle = cor; ctx.lineCap = ctx.lineJoin = "round";
+    MARCA_REMADOR.forEach(([d, w, op]) => { ctx.globalAlpha = op || 1; ctx.lineWidth = w; ctx.stroke(new Path2D(d)); });
+    ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.ellipse(51.6, 23.1, 5, 3, -17.5 * Math.PI / 180, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(19, 19.6, 4.3, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  // a textura rachada do GAME vem do logo já desenhado na página (só as placas, sem o texto)
+  function texturaGame() {
+    const fonte = $('svg[data-logo="game"]');
+    if (!fonte || !fonte.innerHTML) return Promise.resolve(null);
+    const svg = fonte.cloneNode(true), vb = svg.getAttribute("viewBox").split(" ").map(Number);
+    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    svg.setAttribute("width", vb[2] * 4); svg.setAttribute("height", vb[3] * 4);
+    svg.querySelectorAll("[clip-path]").forEach((g) => g.removeAttribute("clip-path"));
+    svg.querySelectorAll('g[filter*="sombra"]').forEach((g) => g.remove());
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml" }));
+    return new Promise((ok) => { const img = new Image(); img.onload = () => ok(img); img.onerror = () => ok(null); img.src = url; });
+  }
+  // GAME: a letra Anton (alargada como no logo) recorta a textura rachada
+  function gameRachado(ctx, tex, cx, topo, largura) {
+    const m = document.createElement("canvas").getContext("2d");
+    m.font = "400px Anton";
+    const mm = m.measureText("GAME"), larg = (mm.actualBoundingBoxLeft + mm.actualBoundingBoxRight) * 1.28, alto = mm.actualBoundingBoxAscent;
+    const k = largura / larg, off = document.createElement("canvas"), o = off.getContext("2d");
+    off.width = Math.ceil(largura); off.height = Math.ceil(alto * k);
+    o.save(); o.scale(1.28 * k, k); o.font = "400px Anton"; o.fillStyle = "#3CC24A"; o.fillText("GAME", mm.actualBoundingBoxLeft, alto); o.restore();
+    if (tex) { o.globalCompositeOperation = "source-in"; o.drawImage(tex, 0, 0, off.width, off.height); }
+    ctx.save(); ctx.shadowColor = "rgba(0,252,39,.35)"; ctx.shadowBlur = 50;
+    ctx.drawImage(off, cx - largura / 2, topo); ctx.restore();
+    return off.height;
+  }
+  // texto centralizado que encolhe até caber na largura
+  function caber(ctx, txt, x, y, max, fonte, tam) {
+    let t = tam;
+    do { ctx.font = fonte.replace("§", t); t -= 4; } while (ctx.measureText(txt).width > max && t > 20);
+    ctx.fillText(txt, x, y);
+  }
+  async function desenharCartao(o) {
+    await Promise.all(["400 100px Anton", "400 100px 'Bebas Neue'", "600 100px 'IBM Plex Mono'", "500 100px 'IBM Plex Mono'",
+      "400 100px 'IBM Plex Sans'", "600 100px 'IBM Plex Sans'", "400 100px 'Kaushan Script'"].map((f) => document.fonts.load(f).catch(() => {})));
+    const tex = await texturaGame();
+    const W = 1080, H = 1920, cv = document.createElement("canvas"), c = cv.getContext("2d");
+    cv.width = W; cv.height = H;
+    const VERDE = "#00FC27", MOLD = "#32D94B", uCor = COR_UNI[UMAP[o.a.u].cor] || MOLD, casa = o.tipo === "casa";
+    // fundo: preto, brilho verde em cima e as raias de fundo do site
+    c.fillStyle = "#000"; c.fillRect(0, 0, W, H);
+    const g = c.createRadialGradient(W / 2, 520, 40, W / 2, 520, 900);
+    g.addColorStop(0, "rgba(0,252,39,.20)"); g.addColorStop(1, "rgba(0,0,0,0)");
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.strokeStyle = "rgba(50,217,75,.07)"; c.lineWidth = 2;
+    for (let y = 120; y < H - 100; y += 72) { c.beginPath(); c.moveTo(80, y); c.lineTo(W - 80, y); c.stroke(); }
+    // moldura verde com brilho
+    c.save(); c.shadowColor = MOLD; c.shadowBlur = 40; c.strokeStyle = MOLD; c.lineWidth = 5;
+    c.beginPath(); c.roundRect(54, 54, W - 108, H - 108, 46); c.stroke(); c.restore();
+    c.textAlign = "center"; c.textBaseline = "alphabetic";
+    // topo: marca
+    remador(c, 300, 128, 2, VERDE);
+    c.fillStyle = VERDE; c.font = "400 74px Anton"; c.textAlign = "left"; c.fillText("STUDIO REMO", 446, 205);
+    c.font = "500 26px 'IBM Plex Mono'"; c.fillText("REMO INDOOR · SC", 450, 246);
+    c.textAlign = "center";
+    // selo do tipo de recorde
+    const selo = casa ? "RECORDE DA CASA" : "RECORDE PESSOAL";
+    c.font = "400 58px 'Bebas Neue'";
+    const sl = c.measureText(selo).width + 120;
+    c.fillStyle = casa ? "#fff" : VERDE; c.beginPath(); c.roundRect(W / 2 - sl / 2, 340, sl, 86, 43); c.fill();
+    c.fillStyle = "#000"; c.fillText(selo, W / 2, 404);
+    // GAME rachado
+    const gAlto = gameRachado(c, tex, W / 2, 486, 780);
+    // nome
+    let y = 486 + gAlto + 190;
+    c.fillStyle = "#fff"; caber(c, o.a.n.toUpperCase(), W / 2, y, 880, "400 §px 'Bebas Neue'", 150);
+    // unidade
+    const uTxt = UMAP[o.a.u].sigla + "  ·  " + o.a.u;
+    c.font = "500 34px 'IBM Plex Mono'";
+    const ul = c.measureText(uTxt).width + 70;
+    y += 70;
+    c.strokeStyle = uCor; c.lineWidth = 3; c.fillStyle = "rgba(255,255,255,.04)";
+    c.beginPath(); c.roundRect(W / 2 - ul / 2, y, ul, 66, 33); c.fill(); c.stroke();
+    c.fillStyle = uCor; c.fillText(uTxt, W / 2, y + 45);
+    // tempo
+    y += 330;
+    c.save(); c.shadowColor = casa ? "rgba(255,255,255,.55)" : "rgba(0,252,39,.6)"; c.shadowBlur = 60;
+    c.fillStyle = casa ? "#fff" : VERDE; c.font = "600 250px 'IBM Plex Mono'"; c.fillText(fmt(o.t), W / 2, y); c.restore();
+    // categoria e destaque
+    y += 92;
+    c.fillStyle = "#B9CBBD"; caber(c, o.cat, W / 2, y, 900, "400 §px 'IBM Plex Sans'", 42);
+    y += 84;
+    c.fillStyle = VERDE; caber(c, o.destaque, W / 2, y, 900, "600 §px 'IBM Plex Sans'", 46);
+    // a raia: o barco cruzando a linha de chegada
+    y += 120;
+    c.strokeStyle = "rgba(50,217,75,.35)"; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(150, y); c.lineTo(W - 150, y); c.stroke();
+    c.setLineDash([12, 10]); c.strokeStyle = "#fff"; c.beginPath(); c.moveTo(W - 220, y - 60); c.lineTo(W - 220, y + 60); c.stroke(); c.setLineDash([]);
+    const lg = c.createLinearGradient(150, 0, W - 200, 0); lg.addColorStop(0, "rgba(0,252,39,0)"); lg.addColorStop(1, VERDE);
+    c.strokeStyle = lg; c.lineWidth = 8; c.beginPath(); c.moveTo(150, y); c.lineTo(W - 250, y); c.stroke();
+    c.save(); c.translate(W - 300, y - 30); c.scale(4.2, 4.2); c.fillStyle = VERDE; c.strokeStyle = VERDE;
+    c.fill(new Path2D("M1 7.2Q13 9.6 25 6.2Q13 5.4 1 7.2Z")); c.lineWidth = 1.3; c.lineCap = "round";
+    c.globalAlpha = .75; c.stroke(new Path2D("M8.5 1.8 14 11M12.5 1.2 17.5 10.4")); c.globalAlpha = 1;
+    c.beginPath(); c.arc(11.6, 4.6, 1.7, 0, 7); c.fill(); c.restore();
+    // data e quem validou
+    y += 120;
+    c.fillStyle = "#7E9584"; c.font = "500 30px 'IBM Plex Mono'";
+    c.fillText(dataCurta(o.d) + (o.prof ? "  ·  validado por " + curto(o.prof) : ""), W / 2, y);
+    // assinatura Studio Remo pousada na moldura, canto de baixo
+    c.font = "400 62px 'Kaushan Script'";
+    const aw = c.measureText("Studio Remo").width;
+    c.fillStyle = "#000"; c.fillRect(W - 140 - aw - 20, H - 54 - 40, aw + 40, 80);
+    remador(c, W - 140 - aw / 2 - 44, H - 54 - 120, 1.4, VERDE);
+    c.fillStyle = VERDE; c.fillText("Studio Remo", W - 140 - aw / 2, H - 54 + 20);
+    return new Promise((ok) => cv.toBlob(ok, "image/png"));
+  }
+
+  // dados do card a partir de um tempo validado (data e professor vêm do próprio teste)
+  function cartaoDeTempo(aId, dist, t, extra) {
+    const a = AMAP[aId], x = testes().find((y) => y.a === aId && y.dist === dist && y.t === t) || {};
+    return Object.assign({ a, t, dist, d: x.d || new Date(), prof: x.prof || "" }, extra);
+  }
+  let cartaoUrl = null;
+  async function abrirCartao(o) {
+    const box = $("#cartao");
+    box.hidden = false; box.classList.add("is-carregando");
+    requestAnimationFrame(() => box.classList.add("is-in"));
+    const blob = await desenharCartao(o);
+    if (cartaoUrl) URL.revokeObjectURL(cartaoUrl);
+    cartaoUrl = URL.createObjectURL(blob);
+    const nome = "recorde-" + normal(o.a.n).replace(/\s+/g, "-") + "-" + distLbl(o.dist).replace(/\W+/g, "") + ".png";
+    const arq = new File([blob], nome, { type: "image/png" });
+    $("#cartao-img").src = cartaoUrl;
+    $("#cartao-baixar").href = cartaoUrl; $("#cartao-baixar").download = nome;
+    const podeCompartilhar = !!(navigator.canShare && navigator.canShare({ files: [arq] }));
+    $("#cartao-enviar").hidden = !podeCompartilhar;
+    $("#cartao-enviar").onclick = () => navigator.share({ files: [arq], title: "Studio Remo Game",
+      text: (o.tipo === "casa" ? "Recorde da casa" : "Recorde pessoal") + " no Studio Remo Game: " + o.a.n + " · " + fmt(o.t) + " no " + distLbl(o.dist) + " 🚣" }).catch(() => {});
+    box.classList.remove("is-carregando");
+  }
+  function fecharCartao() {
+    const box = $("#cartao");
+    box.classList.remove("is-in");
+    setTimeout(() => { box.hidden = true; }, REDUZ ? 0 : 300);
+  }
+
   /* ---------- confete (só quando um recorde cai) ---------- */
   const cv = $("#confetti"), cx = cv.getContext("2d");
   let pecas = [], raf = 0;
   function confete() {
     // no celular (Android) o aparelho vibra junto; no iPhone o navegador não deixa
-    try { if (navigator.vibrate) navigator.vibrate([70, 50, 140]); } catch (e) {}
+    // (só depois de um toque de verdade na página; antes disso o navegador bloqueia e reclama no console)
+    try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([70, 50, 140]); } catch (e) {}
     if (REDUZ) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -685,7 +837,9 @@
     const recs = DISTS.map((dist) => ({ dist, r: classificar({ s: F.s, faixa: F.faixa, dist })[0] }));
     const evo = evolucaoTotal(evoDist);
     $("#rk-side").innerHTML =
-      '<section class="card spot"><h3>Recordes da casa</h3><p class="card__hint">' + esc(rotuloCategoria(F.s, F.faixa).join(" · ")) + " · toque para ver a categoria</p>" +
+      '<section class="card spot"><div class="card__head"><h3>Recordes da casa</h3>' +
+      '<button type="button" class="ibtn-share" data-cartao-rec aria-label="Compartilhar o recorde de ' + distLbl(F.dist) + '">' + ic("share") + "<span>Card</span></button></div>" +
+      '<p class="card__hint">' + esc(rotuloCategoria(F.s, F.faixa).join(" · ")) + " · toque para ver a categoria</p>" +
       '<div class="reclist">' + recs.map((x) =>
         '<button type="button" class="rec" data-dist="' + x.dist + '" aria-pressed="' + (x.dist === F.dist) + '">' +
         '<span class="rec__d">' + distLbl(x.dist) + "</span>" +
@@ -826,7 +980,8 @@
       '<div class="ptile"><span>Na faixa · 500m</span><b data-count="' + (P.pos || 0) + '" data-fmt="pos">' + (P.pos ? P.pos + "º" : "—") + "</b><small>de " + P.total + "</small></div>" +
       '<div class="ptile ptile--up"><span>Evolução total</span><b data-count="' + P.evo + '" data-fmt="menos">−' + P.evo.toFixed(1) + "s</b></div>" +
       '<div class="ptile"><span>Testes validados</span><b data-count="' + P.n + '" data-fmt="int">' + P.n + "</b></div>" +
-      "</div></section>";
+      "</div>" + (P.best[500] ? '<button type="button" class="btn btn--ghost pg-card" data-cartao-pg="' + a.id + '">' + ic("share") + "Compartilhar meu recorde</button>" : "") +
+      "</section>";
 
     /* gráfico + alvo + posições */
     html += '<div class="pgrid"><section class="card spot rise" style="--d:1">' +
@@ -1157,8 +1312,22 @@
           '<span class="tag tag--muted">Recorde pessoal segue ' + fmt(ev.pb) + "</span>") + "</div>";
   }
 
+  // o card é montado na hora do toque (o tempo já está validado e tem data e professor)
+  const cartoesPendentes = {};
+  let nCartao = 0;
+  function linkCartao(fazer) {
+    const k = "c" + ++nCartao;
+    cartoesPendentes[k] = fazer;
+    return ' · <a href="#" data-cartao="' + k + '">Compartilhar o card</a>';
+  }
+  const catAtleta = (a, dist) => distLbl(dist) + " · " + SEXOS[a.s] + " · " + faixaDe(a).label;
+
   function celebrar(ev, nome) {
-    const link = rankLink(ev.a.s, ev.fx.id, ev.dist, "Ver no ranking →");
+    const card = (ev.recorde || ev.pr) ? linkCartao(() => cartaoDeTempo(ev.a.id, ev.dist, ev.t, {
+      tipo: ev.recorde ? "casa" : "pessoal", cat: catAtleta(ev.a, ev.dist),
+      destaque: ev.recorde ? (ev.destronado ? "Superou " + ev.destronado.a.n + " (" + fmt(ev.destronado.t) + ")" : "Primeiro recorde da categoria")
+        : "−" + (ev.pb - ev.t).toFixed(1) + "s no próprio recorde · " + ev.pos + "º na categoria" })) : "";
+    const link = rankLink(ev.a.s, ev.fx.id, ev.dist, "Ver no ranking →") + card;
     if (ev.recorde) {
       confete();
       toast("<b>Recorde da casa caiu!</b> " + esc(nome) + " fez <b>" + fmt(ev.t) + "</b> no " + distLbl(ev.dist) + " (" + ev.fx.label + ")." +
@@ -1422,6 +1591,27 @@
       el.style.setProperty("--mx", e.clientX - r.left + "px");
       el.style.setProperty("--my", e.clientY - r.top + "px");
     }, { passive: true });
+
+    // card de recorde: abrir (aviso do professor, recordes da casa, meu progresso) e fechar
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest && e.target.closest("[data-cartao],[data-cartao-rec],[data-cartao-pg],[data-fechar-cartao]");
+      if (!t) return;
+      e.preventDefault();
+      if (t.hasAttribute("data-fechar-cartao")) return fecharCartao();
+      if (t.dataset.cartao) { const f = cartoesPendentes[t.dataset.cartao]; if (f) abrirCartao(f()); return; }
+      if (t.hasAttribute("data-cartao-rec")) {
+        const cat = classificar({ s: F.s, faixa: F.faixa, dist: F.dist }), r = cat[0], seg = cat[1];
+        if (!r) return;
+        return abrirCartao(cartaoDeTempo(r.a.id, F.dist, r.t, { tipo: "casa",
+          cat: [distLbl(F.dist)].concat(rotuloCategoria(F.s, F.faixa)).join(" · "),
+          destaque: seg ? (seg.t - r.t).toFixed(1) + "s à frente de " + seg.a.n : "1º lugar da categoria" }));
+      }
+      const a = AMAP[t.dataset.cartaoPg], P = perfil(a), R = P.rk[500], seg = R.rk[1];
+      abrirCartao(cartaoDeTempo(a.id, 500, P.best[500], R.i === 0
+        ? { tipo: "casa", cat: catAtleta(a, 500), destaque: seg ? (seg.t - R.rk[0].t).toFixed(1) + "s à frente de " + seg.a.n : "1º lugar da categoria" }
+        : { tipo: "pessoal", cat: catAtleta(a, 500), destaque: R.i + 1 + "º de " + R.rk.length + " na categoria" + (P.evo > 0 ? " · −" + P.evo.toFixed(1) + "s desde o primeiro teste" : "") }));
+    });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#cartao").hidden) fecharCartao(); });
 
     // atalhos "ver no ranking" com a categoria já filtrada
     document.addEventListener("click", (e) => {

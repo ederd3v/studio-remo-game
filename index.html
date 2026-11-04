@@ -392,6 +392,19 @@
 </nav>
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<!-- prévia do card de recorde (imagem de story) com compartilhar e baixar -->
+<div class="cartao" id="cartao" hidden>
+  <div class="cartao__fundo" data-fechar-cartao></div>
+  <div class="cartao__painel" role="dialog" aria-modal="true" aria-label="Card de recorde">
+    <button type="button" class="cartao__x" data-fechar-cartao aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="cartao__quadro"><img id="cartao-img" alt="Card do recorde"><span class="cartao__gira" aria-hidden="true"></span></div>
+    <div class="cartao__acoes">
+      <button type="button" class="btn cartao__enviar" id="cartao-enviar" hidden>Compartilhar</button>
+      <a class="btn btn--ghost" id="cartao-baixar" href="#" download>Baixar imagem</a>
+    </div>
+    <p class="cartao__dica">Pronto para o story do Instagram ou o status do WhatsApp</p>
+  </div>
+</div>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
 <script src="assets/logo.js?v=3"></script>
 <script src="assets/app.js?v=18"></script>
