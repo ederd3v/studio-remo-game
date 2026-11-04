@@ -353,6 +353,8 @@
   const cv = $("#confetti"), cx = cv.getContext("2d");
   let pecas = [], raf = 0;
   function confete() {
+    // no celular (Android) o aparelho vibra junto; no iPhone o navegador não deixa
+    try { if (navigator.vibrate) navigator.vibrate([70, 50, 140]); } catch (e) {}
     if (REDUZ) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -422,6 +424,36 @@
     };
     return '<div class="podio" role="list" aria-label="Pódio">' + [1, 0, 2].map((i) => degrau(lista[i], i)).join("") + "</div>";
   }
+  // "Você" (celular): posição nesse filtro e quanto falta; fora do filtro, um atalho para a sua categoria
+  let voceAntes = "";
+  function renderVoce(lista) {
+    const el = $("#voce");
+    if (!CELULAR.matches) { el.hidden = true; return; }
+    const i = lista.findIndex((r) => r.a.id === EU.id), fx = faixaDe(EU);
+    let html;
+    if (i < 0) {
+      el.dataset.minha = "1";
+      html = '<span class="voce__txt"><small>Você · ' + esc(fx.label.replace(" anos", "")) + "</small><b>Fora deste filtro</b>" +
+        "<span>Toque para ver a sua categoria</span></span>";
+    } else {
+      delete el.dataset.minha;
+      const eu = lista[i], prox = i === 0 ? lista[1] : lista[i - 1];
+      const falta = !prox ? "Sozinho na categoria" : i === 0
+        ? esc(primeiro(prox.a.n)) + " vem a <b>" + (prox.t - eu.t).toFixed(1) + "s</b>"
+        : "Faltam <b>" + (eu.t - prox.t).toFixed(1) + "s</b> para passar " + esc(primeiro(prox.a.n));
+      html = '<span class="voce__txt"><small>Você · ' + distLbl(F.dist) + " · " + fmt(eu.t) + "</small>" +
+        "<b>" + (i + 1) + "º <em>de " + lista.length + "</em></b><span>" + falta + "</span></span>";
+      el.classList.toggle("voce--lider", i === 0);
+    }
+    el.innerHTML = '<span class="voce__av" style="--u:' + UMAP[EU.u].cor + '">' + iniciais(EU.n) + "</span>" + html +
+      '<span class="voce__seta" aria-hidden="true">' + ic("arrow") + "</span>";
+    el.setAttribute("aria-label", el.textContent);
+    el.hidden = false;
+    // mudou a posição (outro filtro): o card dá um pulinho
+    if (voceAntes && voceAntes !== html && !REDUZ) { el.classList.remove("is-pop"); void el.offsetWidth; el.classList.add("is-pop"); }
+    voceAntes = html;
+  }
+
   // no celular o pódio aparece quando há pelo menos 3 atletas; a lista começa no 4º
   const comPodio = (lista) => CELULAR.matches && lista.length >= 3;
 
@@ -440,6 +472,14 @@
   let antesDoGeral = null; // sexo e idade de antes de ligar o Geral (desligar volta para eles)
   function montarFiltrosCelular() {
     $("#mf-resumo").addEventListener("click", abrirFiltros);
+    // fora do filtro, o "Você" leva para a sua categoria em vez de abrir o perfil
+    $("#voce").addEventListener("click", (e) => {
+      if (!e.currentTarget.dataset.minha) return;
+      e.preventDefault();
+      aplicarFiltros({ s: EU.s, faixa: faixaDe(EU).id, uni: "__all" });
+      renderRanking();
+      scrollTo({ top: 0, behavior: REDUZ ? "auto" : "smooth" });
+    });
     posicionarFiltros();
     // a letra da categoria sempre à vista; "anos" só no celular — no desktop o título "Faixa etária" já diz
     $("#mf-faixa").innerHTML = '<button type="button" class="chip-btn" data-mf-f="todas"><span>Todas<span class="chip-anos"> as idades</span></span></button>' + FAIXAS.map((f) =>
@@ -584,6 +624,7 @@
     const lanes = $("#lanes");
     lanes.innerHTML = !lista.length ? "" : CELULAR.matches ? (comPodio(lista) ? podioCelular(lista, categoria) : "") :
       lista.slice(0, TOP).map((r, i) => raiaHTML(r, i, lista[0].t, i === 0 && r === categoria[0], false, F.s === "T")).join("");
+    renderVoce(lista);
     $("#folha-ver").textContent = "Ver " + lista.length + " atleta" + (lista.length === 1 ? "" : "s");
     renderTabela();
     renderLateral();
