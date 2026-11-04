@@ -79,6 +79,8 @@
     tablet: '<rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M11 18h2"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    share: '<path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/>',
+    dots: '<circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/>',
   };
   const ic = (n, cls) => '<svg class="' + (cls || "ic") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[n] + "</svg>";
   const BARCO = '<svg viewBox="0 0 26 12" aria-hidden="true"><path d="M1 7.2Q13 9.6 25 6.2Q13 5.4 1 7.2Z" fill="currentColor"/><path d="M8.5 1.8 14 11M12.5 1.2 17.5 10.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".75"/><circle cx="11.6" cy="4.6" r="1.7" fill="currentColor"/></svg>';
@@ -1453,6 +1455,49 @@
     window.addEventListener("hashchange", navegar);
   }
 
+  /* ---------- app no celular ----------
+     sw.js guarda o site para abrir rápido (e sem internet); no celular, um aviso convida a instalar.
+     Android/Chrome: o botão abre a instalação do próprio navegador. iPhone: mostra o caminho
+     (Compartilhar → Adicionar à Tela de Início). Quem fecha o aviso não vê de novo por 30 dias. */
+  function ligarApp() {
+    if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+    const instalado = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    if (instalado) { document.documentElement.classList.add("is-app"); return; }
+    const CHAVE_APP = "srg-app-dispensado";
+    try { if (Date.now() - (+localStorage.getItem(CHAVE_APP) || 0) < 30 * 864e5) return; } catch (e) {}
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    let pedido = null, mostrou = false;
+    const av = document.createElement("div");
+    av.className = "app-aviso"; av.setAttribute("role", "dialog"); av.setAttribute("aria-label", "Instalar o app");
+    function mostrar() {
+      if (mostrou || !CELULAR.matches || rotaAtual === "tv") return;
+      mostrou = true;
+      const como = ios ? "Toque em <b>Compartilhar</b> " + ic("share") + " e depois em <b>Adicionar à Tela de Início</b>."
+        : "No menu do navegador " + ic("dots") + ", toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.";
+      av.innerHTML = '<img src="assets/icones/icone-192.png" alt="" width="44" height="44">' +
+        '<div class="app-aviso__txt"><b>Instale o Remo Game</b><span>Ícone na tela inicial, abre em tela cheia</span>' +
+        '<p class="app-aviso__como" hidden>' + como + "</p></div>" +
+        '<button type="button" class="app-aviso__ok">' + (pedido ? "Instalar" : "Como?") + "</button>" +
+        '<button type="button" class="app-aviso__x" aria-label="Agora não">' + ic("x") + "</button>";
+      document.body.appendChild(av);
+      requestAnimationFrame(() => requestAnimationFrame(() => av.classList.add("is-in")));
+    }
+    function fechar(lembrar) {
+      av.classList.remove("is-in");
+      setTimeout(() => av.remove(), 400);
+      if (lembrar) try { localStorage.setItem(CHAVE_APP, String(Date.now())); } catch (e) {}
+    }
+    av.addEventListener("click", (e) => {
+      if (e.target.closest(".app-aviso__x")) return fechar(true);
+      if (!e.target.closest(".app-aviso__ok")) return;
+      if (pedido) { pedido.prompt(); pedido.userChoice.then((r) => { pedido = null; fechar(r.outcome !== "accepted"); }); }
+      else { $(".app-aviso__como", av).hidden = false; e.target.closest(".app-aviso__ok").hidden = true; }
+    });
+    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); pedido = e; const b = $(".app-aviso__ok", av); if (b) b.textContent = "Instalar"; });
+    window.addEventListener("appinstalled", () => fechar(false));
+    setTimeout(mostrar, 4000);
+  }
+
   /* ---------- início ---------- */
   // assinatura Studio Remo pousada na moldura de cada página (o remador do topo + o nome)
   const assinatura = '<span class="assinatura" aria-hidden="true">' + $(".brand__mark").innerHTML + "<span>Studio Remo</span></span>";
@@ -1466,4 +1511,5 @@
   ligarTV();
   ligarGlobais();
   navegar();
+  ligarApp();
 })();
