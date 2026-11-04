@@ -87,6 +87,7 @@
 
   let seq = 0;
   function desenhar(svg) {
+    svg.dataset.pronto = "1";
     const soGame = svg.getAttribute("data-logo") === "game", id = "lg" + ++seq + "-";
 
     // tudo medido com a altura das maiúsculas = 100
@@ -134,12 +135,17 @@
       "</g></g>";
   }
 
+  // só desenha com as fontes carregadas (a medida depende delas) e só os logos que estão na tela:
+  // cada GAME tem ~500 placas com filtro, e os das páginas escondidas esperam a página abrir
+  const fontes = document.fonts ? [document.fonts.load("100px " + PILHA.marca, "STUDIO REMO GAME"), document.fonts.load("500 100px " + PILHA.sub, "REMO INDOOR · SC")] : [];
+  const fontesProntas = Promise.all(fontes).catch(() => {});
   function desenharTodos(raiz) {
-    (raiz || document).querySelectorAll("svg[data-logo]").forEach(desenhar);
+    return fontesProntas.then(() => {
+      (raiz || document).querySelectorAll("svg[data-logo]:not([data-pronto])").forEach((svg) => {
+        if (svg.getClientRects().length) desenhar(svg);
+      });
+    });
   }
   window.SRGLogo = { desenhar, desenharTodos };
-
-  // só desenha com as fontes carregadas (a medida depende delas)
-  const fontes = document.fonts ? [document.fonts.load("100px " + PILHA.marca, "STUDIO REMO GAME"), document.fonts.load("500 100px " + PILHA.sub, "REMO INDOOR · SC")] : [];
-  Promise.all(fontes).catch(() => {}).then(() => desenharTodos());
+  desenharTodos();
 })();

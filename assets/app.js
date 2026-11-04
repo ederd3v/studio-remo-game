@@ -370,7 +370,8 @@
   // a textura rachada do GAME vem do logo já desenhado na página (só as placas, sem o texto)
   function texturaGame() {
     const fonte = $('svg[data-logo="game"]');
-    if (!fonte || !fonte.innerHTML) return Promise.resolve(null);
+    if (!fonte) return Promise.resolve(null);
+    if (!fonte.innerHTML && window.SRGLogo) SRGLogo.desenhar(fonte);
     const svg = fonte.cloneNode(true), vb = svg.getAttribute("viewBox").split(" ").map(Number);
     svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     svg.setAttribute("width", vb[2] * 4); svg.setAttribute("height", vb[3] * 4);
@@ -1574,6 +1575,8 @@
     if (!primeiraVez && (trocou || r === "progresso")) window.scrollTo({ top: 0, behavior: "instant" });
     primeiraVez = false;
     if (r === "escopo") { revelar(); setTimeout(revelar, 350); }
+    // o GAME de cada página é desenhado só quando ela aparece (o telão mede o palco depois)
+    if (window.SRGLogo) SRGLogo.desenharTodos().then(() => { if (rotaAtual === "tv") ajustarTV(); });
   }
 
   function revelar() {
@@ -1584,8 +1587,9 @@
 
   /* ---------- ligações globais ---------- */
   function ligarGlobais() {
-    // brilho que segue o ponteiro nos cartões
+    // brilho que segue o ponteiro nos cartões — só com mouse: no toque não aparece e só pesava na rolagem
     document.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse") return;
       const el = e.target.closest && e.target.closest(".spot");
       if (!el) return;
       const r = el.getBoundingClientRect();
