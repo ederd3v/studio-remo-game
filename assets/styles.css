@@ -1611,10 +1611,12 @@ body.tv-ocioso{cursor:none}
 .app-aviso.is-in{transform:none;opacity:1}
 .app-aviso img{width:44px;height:44px;border-radius:11px;display:block;box-shadow:0 0 0 1px var(--line)}
 .app-aviso__txt{min-width:0;line-height:1.2}
-.app-aviso__txt b{display:block;font-family:var(--display);font-weight:400;font-size:1.25rem;letter-spacing:.04em}
+.app-aviso__txt > b{display:block;font-family:var(--display);font-weight:400;font-size:1.25rem;letter-spacing:.04em}
 .app-aviso__txt > span{display:block;font-size:.75rem;color:var(--ink-2)}
 .app-aviso__como{grid-column:1 / -1;margin:6px 0 0;font-size:.8125rem;color:var(--ink);line-height:1.35}
-.app-aviso__como b{color:var(--accent)}
+.app-aviso__como b{color:var(--accent);font-weight:700}
+.app-aviso{align-items:start}
+.app-aviso > .app-aviso__ok,.app-aviso > .app-aviso__x{align-self:center}
 .app-aviso__como .ic{width:15px;height:15px;vertical-align:-2px;color:var(--accent)}
 .app-aviso__ok{
   padding:9px 13px;border-radius:10px;cursor:pointer;font-weight:700;font-size:.875rem;
