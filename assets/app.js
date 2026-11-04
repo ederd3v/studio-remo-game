@@ -976,8 +976,9 @@
     }
 
     html += '<div class="ptiles">' +
-      '<div class="ptile ptile--brass"><span>Recorde 500m</span><b data-count="' + (P.best[500] || 0) + '" data-fmt="tempo">' + (P.best[500] ? fmt(P.best[500]) : "—") + "</b></div>" +
-      '<div class="ptile"><span>Na faixa · 500m</span><b data-count="' + (P.pos || 0) + '" data-fmt="pos">' + (P.pos ? P.pos + "º" : "—") + "</b><small>de " + P.total + "</small></div>" +
+      // recorde e posição de cada categoria ficam em "Posição por categoria" — aqui, o que não aparece em outro lugar
+      '<div class="ptile ptile--brass"><span>Recordes pessoais</span><b data-count="' + P.prs + '" data-fmt="int">' + P.prs + "</b></div>" +
+      '<div class="ptile"><span>Conquistas</span><b data-count="' + P.nConq + '" data-fmt="int">' + P.nConq + "</b><small>de " + P.conq.length + "</small></div>" +
       '<div class="ptile ptile--up"><span>Evolução total</span><b data-count="' + P.evo + '" data-fmt="menos">−' + P.evo.toFixed(1) + "s</b></div>" +
       '<div class="ptile"><span>Testes validados</span><b data-count="' + P.n + '" data-fmt="int">' + P.n + "</b></div>" +
       "</div>" + (P.best[500] ? '<button type="button" class="btn btn--ghost pg-card" data-cartao-pg="' + a.id + '">' + ic("share") + "Compartilhar meu recorde</button>" : "") +
