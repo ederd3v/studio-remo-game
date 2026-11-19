@@ -269,7 +269,8 @@
   async function rpc(fn, args) {
     const r = await fetch(CFG.url + "/rest/v1/rpc/" + fn, {
       method: "POST",
-      headers: { apikey: CFG.chave, Authorization: "Bearer " + CFG.chave, "Content-Type": "application/json" },
+      // chave nova (sb_publishable_…) vai só no apikey; a antiga (anon, JWT) vai também no Authorization
+      headers: Object.assign({ apikey: CFG.chave, "Content-Type": "application/json" }, /^eyJ/.test(CFG.chave) ? { Authorization: "Bearer " + CFG.chave } : {}),
       body: JSON.stringify(args || {}),
     });
     const txt = await r.text();

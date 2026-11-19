@@ -104,8 +104,8 @@ language sql stable security definer set search_path = '' as $$
       from public.tempos t join public.atletas a on a.id = t.atleta and a.ativo
       join public.professores p on p.id = t.professor
       where t.status = 'validado'), '[]'::json),
-    'professores', coalesce((select json_agg(json_build_object('id', p.id, 'nome', p.nome, 'u', p.unidade) order by p.unidade, p.nome)
-      from public.professores p where p.ativo), '[]'::json)
+    'professores', coalesce((select json_agg(json_build_object('id', p.id, 'nome', p.nome, 'u', p.unidade) order by u.ordem, p.nome)
+      from public.professores p join public.unidades u on u.sigla = p.unidade where p.ativo), '[]'::json)
   )
 $$;
 
