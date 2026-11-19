@@ -17,7 +17,7 @@
 <!-- letras hospedadas no próprio site (assets/fontes): as do logo e dos títulos (pequenas) já começam a baixar aqui -->
 <link rel="preload" href="assets/fontes/anton-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fontes/bebas-neue-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/styles.css?v=18">
+<link rel="stylesheet" href="assets/styles.css?v=19">
 <script>try{var t=localStorage.getItem('srg-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
@@ -48,7 +48,7 @@
       <a href="#/ranking" data-route="ranking">Ranking</a>
       <a href="#/progresso" data-route="progresso">Meu progresso</a>
       <a href="#/professor" data-route="professor">Área do professor</a>
-      <a href="#/escopo" data-route="escopo">Escopo</a>
+      <a href="#/escopo" data-route="escopo" class="so-demo">Escopo</a>
     </nav>
     <a class="tvbtn" href="#/tv" id="tv-btn" aria-label="Abrir o modo TV (telão)" title="Modo TV para os telões da academia">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -389,7 +389,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/></svg>
     <span>Professor</span>
   </a>
-  <a href="#/escopo" data-route="escopo">
+  <a href="#/escopo" data-route="escopo" class="so-demo">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
     <span>Escopo</span>
   </a>
@@ -410,7 +410,8 @@
   </div>
 </div>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
+<script src="assets/config.js?v=1"></script>
 <script src="assets/logo.js?v=3"></script>
-<script src="assets/app.js?v=18"></script>
+<script src="assets/app.js?v=19"></script>
 </body>
 </html>

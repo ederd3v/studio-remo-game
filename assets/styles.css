@@ -1695,3 +1695,18 @@ body.tv-ocioso{cursor:none}
   /* o reflexo do recordista passa 3 vezes e para */
   .rrow--lead::after{animation-iteration-count:3}
 }
+
+/* ---------- versão com banco de dados ----------
+   Escopo é material de venda: só aparece na demonstração (?demo). */
+html:not(.demo) .so-demo{display:none!important}
+@media (max-width:640px){ html:not(.demo) .tabbar{grid-template-columns:repeat(3,1fr)} }
+/* "Sou eu" no perfil */
+.sou-eu{margin:6px 0 10px}
+.sou-eu[aria-pressed="true"]{color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+/* cadastro de atleta novo, dentro do "Lançar tempo" */
+.novo{display:grid;gap:12px;padding:14px;border:1px solid var(--frame);border-radius:14px;background:var(--accent-wash)}
+.novo[hidden]{display:none}
+.novo input[type="date"]{color-scheme:dark}
+:root[data-theme="light"] .novo input[type="date"]{color-scheme:light}
+.novo__acoes{display:flex;gap:8px;flex-wrap:wrap}
+.log__vazio p{color:var(--muted)}

@@ -1,11 +1,16 @@
 /* ============================================================
    STUDIO REMO GAME — app
    Ranking · Meu progresso · Área do professor · Escopo
-   Tudo roda no navegador; dados fictícios, determinísticos por nome
-   (recarregar a página não reembaralha o ranking).
+   Com assets/config.js preenchido, os dados vêm do banco (Supabase): atletas e tempos
+   reais, professor entra com o próprio PIN. Sem config — ou com ?demo na URL — roda a
+   demonstração: dados fictícios, determinísticos por nome, salvos só no navegador.
    ============================================================ */
 (function () {
   "use strict";
+
+  const CFG = window.SRG_CONFIG && window.SRG_CONFIG.url ? window.SRG_CONFIG : null;
+  const DEMO = !CFG || /[?&]demo\b/.test(location.search);
+  document.documentElement.classList.toggle("demo", DEMO);
 
   /* ---------- utilidades ---------- */
   const $ = (s, r) => (r || document).querySelector(s);
@@ -94,6 +99,9 @@
     { nome: "Balneário Camboriú", sigla: "BC", cor: "var(--u-bc)", prof: "Prof.ª Bianca Tomio" },
   ];
   const UMAP = {}; UNIDADES.forEach((u) => (UMAP[u.nome] = u));
+  const SIGLA = {}; UNIDADES.forEach((u) => (SIGLA[u.sigla] = u.nome)); // o banco guarda a sigla
+  // professores que aparecem na entrada da Área do professor (no banco: só os ativos)
+  let PROFS = DEMO ? UNIDADES.map((u, i) => ({ id: i, nome: u.prof, u: u.nome })) : [];
   const curto = (p) => p.split(" ").slice(0, 2).join(" ");
 
   // categorias por idade: de 5 em 5 anos, cada uma com a sua letra — A (15–19), B (20–24) … L (70+)
@@ -103,7 +111,7 @@
     FAIXAS.push({ id: letra, letra, idade, label: "Cat. " + letra + " · " + idade + " anos", min, max: ultima ? 120 : min + 4 });
   }
   const FMAP = {}; FAIXAS.forEach((f) => (FMAP[f.id] = f));
-  const faixaDe = (a) => FAIXAS.find((f) => a.i >= f.min && a.i <= f.max);
+  const faixaDe = (a) => FAIXAS.find((f) => a.i >= f.min && a.i <= f.max) || FAIXAS[0]; // abaixo de 15 anos conta na A
   // "sem filtro": todas as idades e os dois sexos juntos (fora de FAIXAS, que são as faixas reais)
   const FAIXA_TODAS = { id: "todas", label: "Todas as idades", min: 0, max: 200 };
   FMAP.todas = FAIXA_TODAS;
@@ -122,8 +130,8 @@
     { min: 1600, n: "Capitão de raia" }, { min: 2500, n: "Lenda da casa" },
   ];
 
-  /* ---------- atletas (b = melhor tempo de 500m em segundos) ---------- */
-  const ATLETAS = [
+  /* ---------- atletas da demonstração (b = melhor tempo de 500m em segundos) ---------- */
+  const ATLETAS_DEMO = [
     { n: "Lucas Boabaid", s: "M", i: 22, u: "Itajaí", b: 98.0 },
     { n: "Pedro Hoffmann", s: "M", i: 21, u: "Joinville", b: 99.4 },
     { n: "Gabriel Sviatopolk", s: "M", i: 24, u: "Itajaí", b: 101.2 },
@@ -187,8 +195,11 @@
     { n: "Hélio Buss", s: "M", i: 75, u: "Itajaí", b: 135.9 },
     { n: "Irene Koch", s: "F", i: 71, u: "Itajaí", b: 146.3 },
   ];
+  // no modo real a lista começa vazia e é preenchida pelo banco (carregarDados)
+  const ATLETAS = DEMO ? ATLETAS_DEMO : [];
   const AMAP = {};
-  const EU = ATLETAS.find((a) => a.me);
+  // "você": na demo é o Eder; no modo real, o atleta que a pessoa marcou como "Sou eu" neste aparelho
+  let EU = ATLETAS.find((a) => a.me) || null;
 
   /* ---------- histórico simulado ----------
      A academia roda dia de teste uma vez por mês. Cada atleta tem de 5 a 12 meses
@@ -249,9 +260,59 @@
   function carregar() {
     try { const s = JSON.parse(localStorage.getItem(CHAVE)); return s && s.v === 2 ? s : null; } catch (e) { return null; }
   }
-  let state = carregar() || estadoInicial();
+  let state = DEMO ? carregar() || estadoInicial() : { v: 2, n: 0, log: [], added: [] };
   let _testes = null;
-  function mudou() { _testes = null; try { localStorage.setItem(CHAVE, JSON.stringify(state)); } catch (e) {} }
+  function mudou() { _testes = null; if (DEMO) try { localStorage.setItem(CHAVE, JSON.stringify(state)); } catch (e) {} }
+
+  /* ---------- banco (Supabase) ----------
+     O site só chama funções (rpc). Ler é público; gravar exige a sessão aberta com o PIN. */
+  async function rpc(fn, args) {
+    const r = await fetch(CFG.url + "/rest/v1/rpc/" + fn, {
+      method: "POST",
+      headers: { apikey: CFG.chave, Authorization: "Bearer " + CFG.chave, "Content-Type": "application/json" },
+      body: JSON.stringify(args || {}),
+    });
+    const txt = await r.text();
+    let j = null;
+    try { j = txt ? JSON.parse(txt) : null; } catch (e) {}
+    if (!r.ok) { const e = new Error((j && j.message) || "falha " + r.status); e.codigo = (j && j.message) || ""; throw e; }
+    return j;
+  }
+  const CHAVE_DADOS = "srg-dados-v1", CHAVE_EU = "srg-eu";
+  let dadosTxt = "";
+  function aplicarDados(d) {
+    ATLETAS.length = 0;
+    Object.keys(AMAP).forEach((k) => delete AMAP[k]);
+    (d.atletas || []).forEach((x) => { const a = { id: x.id, n: x.n, s: x.s, i: x.i, u: SIGLA[x.u] || x.u }; if (UMAP[a.u]) { ATLETAS.push(a); AMAP[a.id] = a; } });
+    SEED.length = 0;
+    (d.tempos || []).forEach((t) => { if (AMAP[t.a]) SEED.push({ id: "b" + t.id, bid: t.id, a: t.a, dist: t.dist, t: +t.t, d: new Date(t.d), prof: t.prof, via: "" }); });
+    PROFS = (d.professores || []).map((p) => ({ id: p.id, nome: p.nome, u: SIGLA[p.u] || p.u })).filter((p) => UMAP[p.u]);
+    let eu = null;
+    try { eu = localStorage.getItem(CHAVE_EU); } catch (e) {}
+    EU = (eu && AMAP[eu]) || null;
+    ATLETAS.forEach((a) => (a.me = a === EU));
+    _testes = null;
+  }
+  // devolve true se algo mudou desde a última leitura
+  async function carregarDados() {
+    const d = await rpc("dados_publicos");
+    const txt = JSON.stringify(d);
+    if (txt === dadosTxt) return false;
+    dadosTxt = txt;
+    aplicarDados(d);
+    try { localStorage.setItem(CHAVE_DADOS, txt); } catch (e) {}
+    return true;
+  }
+  // sem internet, abre com a última cópia que este aparelho viu
+  function dadosGuardados() {
+    try { const txt = localStorage.getItem(CHAVE_DADOS); if (txt) { dadosTxt = txt; aplicarDados(JSON.parse(txt)); return true; } } catch (e) {}
+    return false;
+  }
+  function marcarEu(id) {
+    try { id ? localStorage.setItem(CHAVE_EU, id) : localStorage.removeItem(CHAVE_EU); } catch (e) {}
+    EU = (id && AMAP[id]) || null;
+    ATLETAS.forEach((a) => (a.me = a === EU));
+  }
 
   function testes() {
     if (_testes) return _testes;
@@ -584,7 +645,7 @@
   let voceAntes = "";
   function renderVoce(lista) {
     const el = $("#voce");
-    if (!CELULAR.matches) { el.hidden = true; return; }
+    if (!CELULAR.matches || !EU) { el.hidden = true; return; }
     const i = lista.findIndex((r) => r.a.id === EU.id), fx = faixaDe(EU);
     let html;
     if (i < 0) {
@@ -630,7 +691,7 @@
     $("#mf-resumo").addEventListener("click", abrirFiltros);
     // fora do filtro, o "Você" leva para a sua categoria em vez de abrir o perfil
     $("#voce").addEventListener("click", (e) => {
-      if (!e.currentTarget.dataset.minha) return;
+      if (!e.currentTarget.dataset.minha || !EU) return;
       e.preventDefault();
       aplicarFiltros({ s: EU.s, faixa: faixaDe(EU).id, uni: "__all" });
       renderRanking();
@@ -940,15 +1001,25 @@
 
   let pgDist = 500, pgAtleta = null;
 
+  function preencherSeletorAtleta() {
+    $("#pg-atleta").innerHTML = UNIDADES.map((u) => {
+      const doa = ATLETAS.filter((a) => a.u === u.nome).sort((x, y) => x.n.localeCompare(y.n, "pt-BR"));
+      return doa.length ? '<optgroup label="' + esc(u.nome) + '">' + doa
+        .map((a) => '<option value="' + a.id + '">' + esc(a.n) + (a.me ? " (você)" : "") + "</option>").join("") + "</optgroup>" : "";
+    }).join("");
+  }
   function montarSeletorAtleta() {
-    $("#pg-atleta").innerHTML = UNIDADES.map((u) =>
-      '<optgroup label="' + esc(u.nome) + '">' + ATLETAS.filter((a) => a.u === u.nome)
-        .map((a) => '<option value="' + a.id + '">' + esc(a.n) + (a.me ? " (você)" : "") + "</option>").join("") + "</optgroup>").join("");
+    preencherSeletorAtleta();
     $("#pg-atleta").addEventListener("change", (e) => { location.hash = "#/progresso/" + e.target.value; });
   }
 
   function renderProgresso(id) {
-    const a = AMAP[id] || EU;
+    const a = AMAP[id] || EU || ATLETAS[0];
+    if (!a) {
+      $("#pg").innerHTML = '<div class="stack"><section class="card rise"><div class="empty"><b>Nenhum atleta cadastrado ainda</b>' +
+        "Assim que o professor cadastrar os atletas e lançar os primeiros tempos, cada um ganha o seu painel aqui.</div></section></div>";
+      return;
+    }
     if (pgAtleta !== a.id) pgDist = 500;
     pgAtleta = a.id;
     $("#pg-atleta").value = a.id;
@@ -960,6 +1031,8 @@
       '<div class="ring" style="--p:' + P.xpPct.toFixed(3) + '"><div class="ring__in"><span class="ring__av">' + iniciais(a.n) + '</span></div><span class="ring__lvl">NÍVEL ' + P.nivel + "</span></div>" +
       '<div class="profile__id"><p class="eyebrow">' + (a.s === "M" ? "Masculino" : "Feminino") + " · " + P.fx.label + "</p>" +
       "<h2>" + esc(a.n) + "</h2>" +
+      (DEMO ? "" : '<button type="button" class="btn btn--ghost btn--sm sou-eu" data-sou-eu="' + a.id + '" aria-pressed="' + !!a.me + '">' +
+        (a.me ? ic("check") + "Este sou eu" : "Sou eu — marcar neste aparelho") + "</button>") +
       '<div class="profile__meta">' + selo(a.u) + '<span class="dot"></span><span>' + a.i + " anos</span>" +
       (desde ? '<span class="dot"></span><span>no studio desde ' + desde + "</span>" : "") + "</div>" +
       '<div class="xp"><div class="xp__top"><b>' + P.nivelNome + "</b><span>" + P.xp.toLocaleString("pt-BR") + (P.prox ? " / " + P.prox.min.toLocaleString("pt-BR") : "") + " XP</span></div>" +
@@ -1138,6 +1211,14 @@
 
   function ligarProgresso() {
     $("#pg").addEventListener("click", (ev) => {
+      const eu = ev.target.closest("[data-sou-eu]");
+      if (eu) {
+        const id = eu.dataset.souEu, ja = EU && EU.id === id;
+        marcarEu(ja ? null : id);
+        preencherSeletorAtleta(); renderProgresso(id);
+        toast(ja ? "<b>Desmarcado.</b> Este aparelho não mostra mais o seu card." : "<b>Pronto!</b> No ranking do celular, o card “Você” mostra a sua posição.", "info");
+        return;
+      }
       const mais = ev.target.closest("[data-hist]");
       if (mais) {
         const aberto = $("#pg-hist").classList.toggle("is-open");
@@ -1154,21 +1235,49 @@
 
   /* ============================================================ ÁREA DO PROFESSOR */
   const exemplo = (d) => (d === 500 ? "1:42.5" : d === 1000 ? "3:35.0" : "1:35.0");
-  let sessao = null, profSel = 1, pin = "", lDist = 500, sessaoDesde = null;
-  try { const s = sessionStorage.getItem("srg-prof"); if (s != null) { sessao = +s; sessaoDesde = new Date(); } } catch (e) {}
+  /* demo: sessao = índice da unidade. Modo real: sessao = { token, id, nome, u } devolvido pelo banco,
+     guardado só nesta aba (fechou a aba, pede o PIN de novo); o banco expira a sessão em 14 h. */
+  let sessao = null, profSel = DEMO ? 1 : 0, pin = "", lDist = 500, sessaoDesde = null;
+  let ATL_PROF = []; // atletas com nome completo e nascimento — só com a sessão aberta
+  const CHAVE_SESSAO = DEMO ? "srg-prof" : "srg-prof-sessao";
+  try {
+    const s = sessionStorage.getItem(CHAVE_SESSAO);
+    if (s != null) { sessao = DEMO ? +s : JSON.parse(s); sessaoDesde = new Date(); }
+  } catch (e) {}
 
-  function renderProfessor() { sessao == null ? renderGate() : renderDash(); }
+  function renderProfessor() {
+    if (sessao == null) return renderGate();
+    if (!DEMO && !ATL_PROF.length) return carregarAtletasProf().then(renderDash, () => {});
+    renderDash();
+  }
+  async function carregarAtletasProf() {
+    try { ATL_PROF = (await rpc("atletas_da_sessao", { p_token: sessao.token })) || []; }
+    catch (e) { erroDoBanco(e); throw e; }
+  }
+  // sessão vencida ou sem internet: avisa do jeito certo
+  function erroDoBanco(e) {
+    if (/sessao/.test(e.codigo || "")) {
+      sessao = null; try { sessionStorage.removeItem(CHAVE_SESSAO); } catch (x) {}
+      if (rotaAtual === "professor") renderGate();
+      toast("<b>A sessão terminou.</b> Entre de novo com o seu PIN.", "info");
+    } else if (/duplicado/.test(e.codigo || "")) toast("<b>Esse atleta já está cadastrado</b> (mesmo nome e nascimento). Procure na lista.", "info");
+    else if (/nome/.test(e.codigo || "")) toast("<b>Nome incompleto.</b> Escreva nome e sobrenome.", "info");
+    else if (/nascimento/.test(e.codigo || "")) toast("<b>Data de nascimento inválida.</b> Confira o ano.", "info");
+    else if (/tempo/.test(e.codigo || "")) toast("<b>Tempo fora do padrão</b> para essa categoria. Confira no monitor.", "info");
+    else toast("<b>Sem conexão com o banco.</b> Confira a internet e tente de novo.", "info");
+  }
 
   function renderGate() {
     pin = "";
+    if (profSel >= PROFS.length) profSel = 0;
     $("#pf").innerHTML =
       '<div class="gate rise" style="--d:3" id="gate">' +
       '<div class="gate__lock">' + ic("lock") + "</div>" +
       "<h2>Entrar com PIN</h2>" +
-      '<p class="card__hint">Demonstração: qualquer PIN de 4 dígitos entra.</p>' +
+      '<p class="card__hint">' + (DEMO ? "Demonstração: qualquer PIN de 4 dígitos entra." : PROFS.length ? "Escolha o seu nome e digite o seu PIN." : "Nenhum professor cadastrado ainda.") + "</p>" +
       '<div class="profsel" role="radiogroup" aria-label="Professor">' +
-      UNIDADES.map((u, i) => '<button type="button" class="profopt" role="radio" aria-checked="' + (i === profSel) + '" data-p="' + i + '" style="--u:' + u.cor + '">' +
-        '<span class="avatar" style="--u:' + u.cor + '">' + iniciais(u.prof) + "</span><span><b>" + esc(curto(u.prof)) + "</b><small>" + esc(u.nome) + "</small></span></button>").join("") +
+      PROFS.map((p, i) => { const u = UMAP[p.u]; return '<button type="button" class="profopt" role="radio" aria-checked="' + (i === profSel) + '" data-p="' + i + '" style="--u:' + u.cor + '">' +
+        '<span class="avatar" style="--u:' + u.cor + '">' + iniciais(p.nome) + "</span><span><b>" + esc(curto(p.nome)) + "</b><small>" + esc(u.nome) + "</small></span></button>"; }).join("") +
       "</div>" +
       '<div class="dots" id="dots" role="img" aria-label="0 de 4 dígitos"><i></i><i></i><i></i><i></i></div>' +
       '<div class="keypad" id="keypad">' +
@@ -1199,31 +1308,75 @@
       $("#pinmsg").className = "msg msg--no"; $("#pinmsg").textContent = "Digite os 4 dígitos do seu PIN.";
       return;
     }
-    $("#gate").classList.add("is-ok");
-    $("#pinmsg").className = "msg msg--ok"; $("#pinmsg").textContent = "PIN aceito · abrindo sessão…";
-    setTimeout(() => {
-      sessao = profSel; sessaoDesde = new Date();
-      try { sessionStorage.setItem("srg-prof", String(sessao)); } catch (e) {}
-      renderDash();
-    }, REDUZ ? 0 : 520);
+    const ok = (s) => {
+      $("#gate").classList.add("is-ok");
+      $("#pinmsg").className = "msg msg--ok"; $("#pinmsg").textContent = "PIN aceito · abrindo sessão…";
+      setTimeout(() => {
+        sessao = s; sessaoDesde = new Date();
+        try { sessionStorage.setItem(CHAVE_SESSAO, DEMO ? String(s) : JSON.stringify(s)); } catch (e) {}
+        renderProfessor();
+      }, REDUZ ? 0 : 520);
+    };
+    const nao = (txt) => {
+      pin = ""; $$("#dots i").forEach((d) => d.classList.remove("on"));
+      dots.classList.remove("is-err"); void dots.offsetWidth; dots.classList.add("is-err");
+      $("#pinmsg").className = "msg msg--no"; $("#pinmsg").textContent = txt;
+    };
+    if (DEMO) return ok(profSel);
+    const p = PROFS[profSel];
+    if (!p) return nao("Escolha o seu nome acima.");
+    $("#gate").classList.add("is-ok"); // trava o teclado enquanto o banco confere
+    rpc("entrar", { p_professor: p.id, p_pin: pin }).then((r) => {
+      $("#gate").classList.remove("is-ok");
+      if (r && r.token) return ok(r);
+      nao(r && r.restam > 0 ? "PIN errado. Mais " + r.restam + " tentativa" + (r.restam === 1 ? "" : "s") + " antes de bloquear por 15 min." : "PIN errado. Bloqueado por 15 minutos.");
+    }, (e) => {
+      $("#gate").classList.remove("is-ok");
+      const m = /bloqueado:(\d+)/.exec(e.codigo || "");
+      nao(m ? "Muitas tentativas erradas. Tente de novo em " + m[1] + " min." : "Sem conexão com o banco. Confira a internet.");
+    });
   }
 
-  const profAtual = () => UNIDADES[sessao];
+  // { prof, nome (da unidade), cor } — o mesmo formato nas duas versões
+  const profAtual = () => {
+    if (DEMO) return UNIDADES[sessao];
+    const u = UMAP[SIGLA[sessao.u]] || UNIDADES[0];
+    return { prof: sessao.nome, nome: u.nome, cor: u.cor, sigla: u.sigla };
+  };
+  const idadeDe = (nasc) => { const n = new Date(nasc + "T12:00:00"), h = new Date(); let i = h.getFullYear() - n.getFullYear(); if (h.getMonth() < n.getMonth() || (h.getMonth() === n.getMonth() && h.getDate() < n.getDate())) i--; return i; };
+  function opcoesAtletas(u, escolhido) {
+    const lista = DEMO ? ATLETAS.map((a) => ({ id: a.id, nome: a.n, i: a.i, u: a.u })) : ATL_PROF.map((a) => ({ id: a.id, nome: a.nome, i: idadeDe(a.nasc), u: SIGLA[a.u] }));
+    return '<option value="">Escolha o atleta…</option>' + (DEMO ? "" : '<option value="__novo">＋ Cadastrar atleta novo</option>') +
+      UNIDADES.slice().sort((x, y) => (x.nome === u.nome ? -1 : y.nome === u.nome ? 1 : 0)).map((un) => {
+        const doa = lista.filter((a) => a.u === un.nome).sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
+        return doa.length ? '<optgroup label="' + esc(un.nome) + '">' + doa.map((a) => '<option value="' + a.id + '"' + (a.id === escolhido ? " selected" : "") + ">" + esc(a.nome) + " · " + a.i + " anos</option>").join("") + "</optgroup>" : "";
+      }).join("");
+  }
+  function formNovoAtleta(u) {
+    const max = new Date(Date.now() - 8 * 365.25 * DIA).toISOString().slice(0, 10);
+    return '<div class="novo" id="novo" hidden>' +
+      '<div class="field"><label class="eyebrow" for="n-nome">Nome completo</label><input class="input" id="n-nome" autocomplete="off" placeholder="Nome e sobrenome" maxlength="80"></div>' +
+      '<div class="field"><span class="eyebrow">Sexo</span><div class="seg" id="n-sexo" role="group" aria-label="Sexo"><button type="button" data-s="M" aria-pressed="false">Masculino</button><button type="button" data-s="F" aria-pressed="false">Feminino</button></div></div>' +
+      '<div class="field"><label class="eyebrow" for="n-nasc">Nascimento</label><input class="input" id="n-nasc" type="date" min="1920-01-01" max="' + max + '"></div>' +
+      '<div class="field"><label class="eyebrow" for="n-uni">Unidade</label><select class="input" id="n-uni">' +
+      UNIDADES.map((x) => '<option value="' + x.sigla + '"' + (x.nome === u.nome ? " selected" : "") + ">" + esc(x.nome) + "</option>").join("") + "</select></div>" +
+      '<p class="hint">No ranking aparece só o primeiro nome e a inicial do sobrenome.</p>' +
+      '<div class="novo__acoes"><button type="button" class="btn btn--sm" id="n-salvar">' + ic("plus") + 'Cadastrar</button><button type="button" class="btn btn--ghost btn--sm" id="n-cancelar">Cancelar</button></div></div>';
+  }
 
   function renderDash() {
     const u = profAtual();
     $("#pf").innerHTML =
       '<div class="dash__head rise" style="--u:' + u.cor + '"><span class="avatar avatar--lg" style="--u:' + u.cor + '">' + iniciais(u.prof) + "</span>" +
       '<div class="dash__who"><b>' + esc(u.prof) + "</b><span>" + selo(u.nome) + '<span class="live">Sessão aberta · ' + hora(sessaoDesde || new Date()) + "</span></span></div>" +
-      '<div class="dash__actions"><button type="button" class="btn btn--ghost btn--sm" id="pf-reset">' + ic("reset") + 'Restaurar demo</button><button type="button" class="btn btn--ghost btn--sm" id="pf-sair">' + ic("logout") + "Sair</button></div></div>" +
+      '<div class="dash__actions">' + (DEMO ? '<button type="button" class="btn btn--ghost btn--sm" id="pf-reset">' + ic("reset") + "Restaurar demo</button>" : "") +
+      '<button type="button" class="btn btn--ghost btn--sm" id="pf-sair">' + ic("logout") + "Sair</button></div></div>" +
       '<div class="kpis rise" style="--d:1" id="pf-kpis"></div>' +
       '<div class="dgrid">' +
       '<section class="card spot rise" style="--d:2"><div class="card__head"><div><h3>Lançar tempo</h3><p class="card__hint">Entra direto no ranking, assinado por você.</p></div></div>' +
       '<form class="launch" id="launch" autocomplete="off" novalidate>' +
-      '<div class="field"><label class="eyebrow" for="l-atleta">Atleta</label><select class="input" id="l-atleta"><option value="">Escolha o atleta…</option>' +
-      UNIDADES.slice().sort((x, y) => (x === u ? -1 : y === u ? 1 : 0)).map((un) => '<optgroup label="' + esc(un.nome) + '">' +
-        ATLETAS.filter((a) => a.u === un.nome).map((a) => '<option value="' + a.id + '">' + esc(a.n) + " · " + a.i + " anos</option>").join("") + "</optgroup>").join("") +
-      "</select></div>" +
+      '<div class="field"><label class="eyebrow" for="l-atleta">Atleta</label><select class="input" id="l-atleta">' + opcoesAtletas(u) + "</select></div>" +
+      (DEMO ? "" : formNovoAtleta(u)) +
       '<div class="field"><span class="eyebrow">Categoria</span><div class="seg seg--lg" id="l-dist" role="group" aria-label="Categoria">' +
       DISTS.map((d) => '<button type="button" data-d="' + d + '" aria-pressed="' + (d === lDist) + '">' + distLbl(d) + "</button>").join("") + "</div></div>" +
       '<div class="field"><label class="eyebrow" for="l-tempo">Tempo final</label><div class="timebox">' +
@@ -1232,15 +1385,32 @@
       '<p class="hint" id="l-hint">Formato m:ss.d — do jeito que aparece no monitor do ergômetro.</p></div>' +
       '<div class="preview" id="l-prev">Escolha o atleta e digite o tempo para ver onde ele entra.</div>' +
       '<button class="btn btn--block" type="submit" id="l-go" disabled>' + ic("check") + "Lançar e validar</button></form></section>" +
-      '<section class="card spot rise" style="--d:3"><div class="card__head"><div><h3>Fila de validação</h3><p class="card__hint">Tempos registrados no tablet da sala</p></div></div><div id="pf-queue"></div></section>' +
+      (DEMO ? '<section class="card spot rise" style="--d:3"><div class="card__head"><div><h3>Fila de validação</h3><p class="card__hint">Tempos registrados no tablet da sala</p></div></div><div id="pf-queue"></div></section>'
+        : '<section class="card spot rise" style="--d:3"><div class="card__head"><div><h3>Lançados hoje</h3><p class="card__hint">Lançou errado? Toque no X para tirar do ranking.</p></div></div><div id="pf-queue"></div></section>') +
       "</div>" +
       '<div class="stack"><section class="card rise" style="--d:4"><div class="card__head"><div><h3>Registro de lançamentos</h3><p class="card__hint">Quem lançou, o quê e quando — nada some daqui.</p></div></div><ol class="log" id="pf-log"></ol></section></div>';
     renderKpis(); renderFila(); renderLog();
   }
 
+  const lancadosHoje = () => SEED.filter((t) => t.d >= HOJE).sort((x, y) => y.d - x.d);
   function renderKpis() {
     const box = $("#pf-kpis");
     if (!box) return;
+    if (!DEMO) {
+      const hoje = lancadosHoje(), ativos = new Set(SEED.map((t) => t.a)).size;
+      // tempo de hoje que é, agora, o recorde da categoria do atleta
+      const recs = hoje.filter((t) => {
+        const a = AMAP[t.a], fx = faixaDe(a), r = fx && classificar({ s: a.s, faixa: fx.id, dist: t.dist })[0];
+        return r && r.a.id === t.a && r.t === t.t;
+      }).length;
+      box.innerHTML =
+        '<div class="kpi kpi--accent"><span>Lançados hoje</span><b data-count="' + hoje.length + '">' + hoje.length + "</b></div>" +
+        '<div class="kpi kpi--brass"><span>Recordes de hoje</span><b data-count="' + recs + '">' + recs + "</b></div>" +
+        '<div class="kpi"><span>Atletas cadastrados</span><b data-count="' + ATLETAS.length + '">' + ATLETAS.length + "</b></div>" +
+        '<div class="kpi"><span>Atletas no ranking</span><b data-count="' + ativos + '">' + ativos + "</b></div>";
+      contar(box);
+      return;
+    }
     const hojeVal = state.added.filter((x) => x.status === "validado" && new Date(x.d) >= HOJE).length;
     const fila = state.added.filter((x) => x.status === "pendente").length;
     const recs = state.log.filter((x) => x.rec && new Date(x.d) >= HOJE).length;
@@ -1256,6 +1426,17 @@
   function renderFila() {
     const box = $("#pf-queue");
     if (!box) return;
+    if (!DEMO) {
+      const hoje = lancadosHoje();
+      box.innerHTML = !hoje.length ? '<div class="qempty"><b>Nada lançado hoje</b>Os tempos que você lançar aparecem aqui.</div>' :
+        '<div class="queue">' + hoje.map((x, i) => {
+          const a = AMAP[x.a];
+          return '<div class="qitem" style="--u:' + UMAP[a.u].cor + ";--i:" + Math.min(i, 12) + '" data-id="' + x.id + '"><div><b>' + esc(a.n) + "</b><span>" + distLbl(x.dist) + " · " + esc(curto(x.prof || "")) + " · " + hora(x.d) + "</span></div>" +
+            '<span class="t">' + fmt(x.t) + "</span>" +
+            '<div class="qitem__act"><button type="button" class="ibtn ibtn--no" data-tirar="' + x.bid + '" aria-label="Tirar o tempo de ' + esc(a.n) + ' do ranking" title="Tirar do ranking">' + ic("x") + "</button></div></div>";
+        }).join("") + "</div>";
+      return;
+    }
     const fila = state.added.filter((x) => x.status === "pendente").sort((x, y) => new Date(y.d) - new Date(x.d));
     if (!fila.length) {
       box.innerHTML = '<div class="qempty"><b>Fila zerada</b>Novos tempos do tablet da sala aparecem aqui.</div>' +
@@ -1276,6 +1457,21 @@
   function renderLog() {
     const box = $("#pf-log");
     if (!box) return;
+    if (!DEMO) {
+      rpc("registro", { p_token: sessao.token }).then((itens) => {
+        if (!$("#pf-log")) return;
+        itens = itens || [];
+        const nomes = {}; ATL_PROF.forEach((a) => (nomes[a.id] = a.nome));
+        box.innerHTML = !itens.length ? '<li class="log__vazio"><p>Nenhum lançamento ainda.</p></li>' : itens.map((x, i) => {
+          const a = AMAP[x.a], d = new Date(x.quando), tirou = x.acao === "removeu";
+          const quem = a ? (x.status === "validado" ? linkAtleta(a, nomes[x.a] || a.n) : esc(nomes[x.a] || a.n)) : "atleta removido";
+          return '<li style="--u:' + (tirou ? "var(--danger)" : a ? UMAP[a.u].cor : "var(--muted)") + ";--i:" + Math.min(i, 12) + '"><time>' + (d >= HOJE ? "hoje<br>" + hora(d) : dd(d.getDate()) + "/" + dd(d.getMonth() + 1) + "<br>" + hora(d)) + "</time>" +
+            "<p><b>" + esc(curto(x.prof)) + "</b> " + (tirou ? "tirou do ranking" : "lançou") + ' <span class="mono">' + fmt(+x.t) + "</span> de " + quem + " · " + distLbl(x.dist) +
+            (!tirou && x.status === "removido" ? '<span class="tag tag--muted">Tirado</span>' : "") + "</p></li>";
+        }).join("");
+      }, erroDoBanco);
+      return;
+    }
     const semeado = SEED.slice().sort((x, y) => y.d - x.d).slice(0, 8)
       .map((t) => ({ d: t.d.toISOString(), prof: t.prof, acao: "validou", a: t.a, dist: t.dist, t: t.t }));
     const itens = state.log.concat(semeado).sort((x, y) => new Date(y.d) - new Date(x.d)).slice(0, 14);
@@ -1290,7 +1486,7 @@
   function atualizarPreview() {
     const prev = $("#l-prev"), go = $("#l-go"), inp = $("#l-tempo");
     if (!prev) return;
-    const id = $("#l-atleta").value, raw = inp.value.trim(), t = parseTempo(raw);
+    const id = $("#l-atleta").value === "__novo" ? "" : $("#l-atleta").value, raw = inp.value.trim(), t = parseTempo(raw);
     const lim = { 500: [70, 240], 1000: [150, 480], [BT]: [40, 600] }[lDist];
     const ok = t != null && t >= lim[0] && t <= lim[1];
     inp.classList.toggle("is-bad", !!raw && !ok);
@@ -1370,6 +1566,46 @@
     toast("<b>Novo tempo no tablet.</b> " + esc(a.n) + " · " + distLbl(dist) + " — aguardando validação.", "info");
   }
 
+  // modo real: o tempo vai para o banco; a comemoração usa a posição calculada antes de entrar
+  function lancarNoBanco(id, t) {
+    const go = $("#l-go"), dist = lDist, evl = avaliar(id, dist, t);
+    go.disabled = true;
+    rpc("lancar_tempo", { p_token: sessao.token, p_atleta: id, p_dist: dist, p_t: t }).then((r) => {
+      SEED.push({ id: "b" + r.id, bid: r.id, a: r.a, dist: r.dist, t: +r.t, d: new Date(r.d), prof: r.prof, via: "" });
+      _testes = null;
+      celebrar(evl, AMAP[id].n);
+      $("#l-tempo").value = "";
+      atualizarPreview(); renderKpis(); renderFila(); renderLog();
+      $("#l-tempo").focus();
+      carregarDados().catch(() => {});
+    }, (e) => { erroDoBanco(e); atualizarPreview(); });
+  }
+  async function cadastrarAtleta(btn) {
+    const nome = $("#n-nome").value.trim().replace(/\s+/g, " "), sx = $('#n-sexo [aria-pressed="true"]'), nasc = $("#n-nasc").value, uni = $("#n-uni").value;
+    if (nome.split(" ").length < 2) { toast("<b>Escreva nome e sobrenome.</b>", "info"); $("#n-nome").focus(); return; }
+    if (!sx) { toast("<b>Escolha o sexo</b> (define a categoria do ranking).", "info"); return; }
+    if (!nasc) { toast("<b>Falta a data de nascimento</b> (define a faixa de idade).", "info"); $("#n-nasc").focus(); return; }
+    // nome parecido já cadastrado? confirma antes de criar outro
+    const igual = ATL_PROF.find((a) => normal(a.nome) === normal(nome));
+    if (igual && !confirm("Já existe " + igual.nome + " (" + idadeDe(igual.nasc) + " anos). Cadastrar outra pessoa com o mesmo nome?")) return;
+    btn.disabled = true;
+    try {
+      const r = await rpc("cadastrar_atleta", { p_token: sessao.token, p_nome: nome, p_sexo: sx.dataset.s, p_nasc: nasc, p_unidade: uni });
+      ATL_PROF.push({ id: r.id, nome: r.nome, nasc: r.nasc, s: r.s, u: r.u });
+      const a = { id: r.id, n: r.n, s: r.s, i: r.i, u: SIGLA[r.u] };
+      ATLETAS.push(a); AMAP[a.id] = a; _testes = null;
+      $("#l-atleta").innerHTML = opcoesAtletas(profAtual(), r.id);
+      $("#novo").hidden = true;
+      ["n-nome", "n-nasc"].forEach((k) => ($("#" + k).value = ""));
+      $$("#n-sexo button").forEach((x) => x.setAttribute("aria-pressed", "false"));
+      preencherSeletorAtleta(); renderKpis(); atualizarPreview();
+      toast("<b>" + esc(r.nome) + " cadastrado.</b> Agora é só lançar o tempo.");
+      $("#l-tempo").focus();
+      carregarDados().catch(() => {});
+    } catch (e) { erroDoBanco(e); }
+    btn.disabled = false;
+  }
+
   function ligarProfessor() {
     const pf = $("#pf");
     pf.addEventListener("click", (ev) => {
@@ -1379,8 +1615,27 @@
       const key = t.closest(".key");
       if (key) return teclar(key.dataset.k);
       if (t.closest("#pf-sair")) {
-        sessao = null; try { sessionStorage.removeItem("srg-prof"); } catch (e) {}
+        if (!DEMO && sessao) rpc("sair", { p_token: sessao.token }).catch(() => {});
+        sessao = null; ATL_PROF = []; try { sessionStorage.removeItem(CHAVE_SESSAO); } catch (e) {}
         renderGate(); return;
+      }
+      // ---- modo real: cadastrar atleta, tirar tempo lançado errado ----
+      const sx = t.closest("#n-sexo button[data-s]");
+      if (sx) { $$("#n-sexo button").forEach((x) => x.setAttribute("aria-pressed", String(x === sx))); return; }
+      if (t.closest("#n-cancelar")) { $("#novo").hidden = true; $("#l-atleta").value = ""; atualizarPreview(); return; }
+      if (t.closest("#n-salvar")) return cadastrarAtleta(t.closest("#n-salvar"));
+      const tirar = t.closest("[data-tirar]");
+      if (tirar) {
+        const bid = +tirar.dataset.tirar, x = SEED.find((y) => y.bid === bid);
+        if (!x || !confirm("Tirar " + fmt(x.t) + " (" + distLbl(x.dist) + ") de " + AMAP[x.a].n + " do ranking?\nO lançamento continua no registro.")) return;
+        tirar.disabled = true;
+        rpc("remover_tempo", { p_token: sessao.token, p_id: bid }).then(() => {
+          SEED.splice(SEED.indexOf(x), 1); _testes = null;
+          sumir(x.id, () => { renderFila(); renderKpis(); renderLog(); atualizarPreview(); });
+          toast("<b>Tempo tirado do ranking.</b> " + esc(AMAP[x.a].n) + " · " + fmt(x.t) + " — fica no registro.", "info");
+          carregarDados().catch(() => {});
+        }, (e) => { tirar.disabled = false; erroDoBanco(e); });
+        return;
       }
       if (t.closest("#pf-reset")) {
         state = estadoInicial(); mudou(); renderDash();
@@ -1417,11 +1672,17 @@
       }
     });
     pf.addEventListener("input", (ev) => { if (ev.target.id === "l-tempo") atualizarPreview(); });
-    pf.addEventListener("change", (ev) => { if (ev.target.id === "l-atleta") atualizarPreview(); });
+    pf.addEventListener("change", (ev) => {
+      if (ev.target.id !== "l-atleta") return;
+      const novo = $("#novo");
+      if (novo) { novo.hidden = ev.target.value !== "__novo"; if (!novo.hidden) $("#n-nome").focus(); }
+      atualizarPreview();
+    });
     pf.addEventListener("submit", (ev) => {
       ev.preventDefault();
       const id = $("#l-atleta").value, t = parseTempo($("#l-tempo").value);
-      if (!id || t == null || $("#l-go").disabled) return;
+      if (!id || id === "__novo" || t == null || $("#l-go").disabled) return;
+      if (!DEMO) return lancarNoBanco(id, t);
       const evl = avaliar(id, lDist, t), prof = profAtual().prof;
       state.n = (state.n || 0) + 1;
       const nid = "n" + Date.now();
@@ -1705,6 +1966,25 @@
   ligarProfessor();
   ligarTV();
   ligarGlobais();
-  navegar();
+  if (DEMO) navegar();
+  else {
+    // abre na hora com a última cópia (se houver) e confere o banco; depois, a cada 20 s
+    // (o telão e o ranking atualizam sozinhos quando um professor lança em qualquer aparelho)
+    const temCopia = dadosGuardados();
+    if (temCopia) { preencherSeletorAtleta(); navegar(); }
+    const redesenhar = () => {
+      preencherSeletorAtleta();
+      if (rotaAtual === "ranking") renderRanking();
+      else if (rotaAtual === "tv") renderTV();
+      else if (rotaAtual === "progresso") { const { param } = lerRota(); renderProgresso(param); }
+      else if (rotaAtual === "professor" && sessao != null) { renderKpis(); renderFila(); }
+      else if (rotaAtual === "professor") renderGate();
+    };
+    carregarDados().then((mudou) => { if (!temCopia) { preencherSeletorAtleta(); navegar(); } else if (mudou) redesenhar(); },
+      () => { if (!temCopia) navegar(); toast("<b>Sem conexão com o banco.</b> Tentando de novo…", "info"); });
+    const conferir = () => { if (!document.hidden) carregarDados().then((m) => m && redesenhar(), () => {}); };
+    setInterval(conferir, 20000);
+    document.addEventListener("visibilitychange", conferir);
+  }
   ligarApp();
 })();
